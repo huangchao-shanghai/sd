@@ -1,0 +1,1304 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>数独派对</title>
+    <style>
+      :root {
+        --bg-1: #ffe8d6;
+        --bg-2: #dff7f2;
+        --ink: #243447;
+        --primary: #ff7b54;
+        --secondary: #00a6a6;
+        --cell: #ffffffcc;
+        --fixed: #243447;
+        --input: #176b87;
+        --selected: #fff4a3;
+        --peer: #fff7cf;
+        --conflict: #ffcdd2;
+        --ok: #d6f5de;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Trebuchet MS", "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        color: var(--ink);
+        min-height: 100vh;
+        background: radial-gradient(circle at 10% 10%, var(--bg-2), transparent 45%),
+          radial-gradient(circle at 90% 20%, #ffd6e0, transparent 40%),
+          linear-gradient(120deg, #fef3c7, var(--bg-1));
+        display: grid;
+        place-items: center;
+        padding: 16px;
+      }
+
+      .app {
+        width: min(980px, 100%);
+        display: grid;
+        gap: 16px;
+      }
+
+      .panel {
+        background: #ffffffd9;
+        border-radius: 20px;
+        backdrop-filter: blur(5px);
+        box-shadow: 0 8px 20px #00000014;
+        padding: 14px;
+      }
+
+      .top {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(1.2rem, 3vw, 1.8rem);
+      }
+
+      .badge {
+        font-size: 0.9rem;
+        background: #fff;
+        padding: 4px 10px;
+        border-radius: 999px;
+        border: 1px solid #00000012;
+      }
+
+      .meta-line {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .main {
+        display: grid;
+        gap: 14px;
+        grid-template-columns: 1fr;
+      }
+
+      .board-wrap {
+        display: grid;
+        place-items: center;
+      }
+
+      .board {
+        width: min(92vw, 560px);
+        aspect-ratio: 1;
+        display: grid;
+        grid-template-columns: repeat(9, 1fr);
+        grid-template-rows: repeat(9, 1fr);
+        border: 3px solid var(--ink);
+        border-radius: 8px;
+        overflow: hidden;
+        background: #fff;
+        touch-action: manipulation;
+      }
+
+      .board.shake {
+        animation: shake 0.25s linear;
+      }
+
+      @keyframes shake {
+        0% { transform: translateX(0); }
+        25% { transform: translateX(-6px); }
+        50% { transform: translateX(6px); }
+        75% { transform: translateX(-4px); }
+        100% { transform: translateX(0); }
+      }
+
+      .cell {
+        border: 1px solid #c7d4de;
+        display: grid;
+        place-items: center;
+        font-size: clamp(1rem, 2.2vw, 1.6rem);
+        font-weight: 700;
+        background: var(--cell);
+        user-select: none;
+        cursor: pointer;
+        text-align: center;
+        white-space: pre-wrap;
+        line-height: 1.1;
+      }
+
+      .cell.note {
+        font-size: clamp(0.5rem, 1.2vw, 0.78rem);
+        letter-spacing: 0.03em;
+      }
+
+      .cell[data-col="2"],
+      .cell[data-col="5"] {
+        border-right: 3px solid var(--ink);
+      }
+
+      .cell[data-row="2"],
+      .cell[data-row="5"] {
+        border-bottom: 3px solid var(--ink);
+      }
+
+      .cell.fixed {
+        color: var(--fixed);
+      }
+
+      .cell.input {
+        color: var(--input);
+      }
+
+      .cell.selected {
+        background: var(--selected);
+      }
+
+      .cell.peer {
+        background: var(--peer);
+      }
+
+      .cell.conflict {
+        background: var(--conflict);
+      }
+
+      .cell.good {
+        background: var(--ok);
+      }
+
+      .controls {
+        display: grid;
+        gap: 10px;
+      }
+
+      .difficulty-row {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
+      }
+
+      .difficulty-row button.active {
+        background: #172b4d;
+        color: #fff;
+      }
+
+      .num-pad {
+        display: grid;
+        grid-template-columns: repeat(9, minmax(0, 1fr));
+        gap: 6px;
+      }
+
+      button {
+        border: none;
+        border-radius: 10px;
+        background: #fff;
+        color: var(--ink);
+        padding: 10px;
+        font-weight: 700;
+        cursor: pointer;
+        border: 1px solid #0000001c;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+      }
+
+      button:active {
+        transform: translateY(0);
+      }
+
+      button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .num-btn {
+        min-height: 44px;
+      }
+
+      .btn-ico {
+        display: inline-block;
+        margin-right: 0.35em;
+        width: 1em;
+        text-align: center;
+      }
+
+      .action-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .action-row button.active {
+        background: #172b4d;
+        color: #fff;
+      }
+
+      .primary {
+        background: var(--primary);
+        color: #fff;
+      }
+
+      .secondary {
+        background: var(--secondary);
+        color: #fff;
+      }
+
+      .warn {
+        background: #b23a48;
+        color: #fff;
+      }
+
+      .info {
+        font-size: 0.95rem;
+        opacity: 0.9;
+      }
+
+      .toast {
+        min-height: 1.2em;
+        font-weight: 700;
+      }
+
+      .board-stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .leaderboard {
+        background: #ffffffc7;
+        border: 1px solid #00000014;
+        border-radius: 12px;
+        padding: 10px;
+      }
+
+      .leaderboard h2 {
+        margin: 0 0 6px;
+        font-size: 1rem;
+      }
+
+      .leaderboard ol {
+        margin: 0;
+        padding-left: 18px;
+      }
+
+      .leaderboard li {
+        margin: 2px 0;
+      }
+
+      #fireworks {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 30;
+      }
+
+      #victoryBanner {
+        position: fixed;
+        top: 12vh;
+        left: 50%;
+        transform: translateX(-50%) scale(0.8);
+        background: linear-gradient(120deg, #ff6b6b, #ffd166, #06d6a0);
+        color: #13293d;
+        border-radius: 999px;
+        padding: 12px 24px;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        box-shadow: 0 10px 28px #00000030;
+        z-index: 35;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      #victoryBanner.show {
+        animation: banner-pop 1.2s ease-out;
+      }
+
+      @keyframes banner-pop {
+        0% { opacity: 0; transform: translateX(-50%) scale(0.65) translateY(30px); }
+        20% { opacity: 1; transform: translateX(-50%) scale(1.08) translateY(0); }
+        70% { opacity: 1; transform: translateX(-50%) scale(1); }
+        100% { opacity: 0; transform: translateX(-50%) scale(0.95) translateY(-18px); }
+      }
+
+      body.victory-flash .panel {
+        animation: victory-glow 0.9s ease-out 2;
+      }
+
+      @keyframes victory-glow {
+        0% { box-shadow: 0 8px 20px #00000014; }
+        50% { box-shadow: 0 0 0 6px #ffd16699, 0 0 0 12px #06d6a055, 0 8px 20px #00000014; }
+        100% { box-shadow: 0 8px 20px #00000014; }
+      }
+
+      @media (min-width: 860px) {
+        .main {
+          grid-template-columns: minmax(0, 580px) minmax(280px, 1fr);
+          align-items: start;
+        }
+
+        .controls {
+          position: sticky;
+          top: 16px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="fireworks"></canvas>
+    <div id="victoryBanner">Perfect! 数独通关</div>
+    <div class="app">
+      <section class="panel top">
+        <h1>数独派对</h1>
+        <div class="meta-line">
+          <div class="badge" id="meta">难度：中等</div>
+          <div class="badge" id="timer">计时：00:00</div>
+          <div class="badge" id="score">得分：120</div>
+        </div>
+      </section>
+
+      <section class="panel main">
+        <div class="board-wrap">
+          <div class="board" id="board" aria-label="Sudoku board"></div>
+        </div>
+
+        <div class="controls">
+          <div class="difficulty-row" id="difficultyRow"></div>
+          <div class="num-pad" id="numPad"></div>
+          <div class="action-row">
+            <button id="noteMode"><span class="btn-ico" aria-hidden="true">✎</span>笔记模式</button>
+            <button id="undo"><span class="btn-ico" aria-hidden="true">↶</span>撤销</button>
+            <button id="redo"><span class="btn-ico" aria-hidden="true">↷</span>重做</button>
+            <button id="erase"><span class="btn-ico" aria-hidden="true">⌫</span>擦除</button>
+            <button id="hint"><span class="btn-ico" aria-hidden="true">💡</span>提示</button>
+            <button class="primary" id="newGame"><span class="btn-ico" aria-hidden="true">⟳</span>新布局</button>
+            <button class="secondary" id="share"><span class="btn-ico" aria-hidden="true">🔗</span>分享进度</button>
+          </div>
+          <div class="board-stats">
+            <div class="badge" id="filled">已填：0/81</div>
+            <div class="badge" id="best">最佳：--:--</div>
+            <div class="badge" id="danger">失败阈值：30</div>
+          </div>
+          <div class="leaderboard">
+            <h2>本地排行榜（前 5）</h2>
+            <ol id="leaderboard"></ol>
+          </div>
+          <div class="info" id="status">点击一个空格开始。</div>
+          <div class="toast" id="toast"></div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      const SIZE = 9;
+      const BOX = 3;
+      const DIGITS = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+      const START_SCORE = 120;
+      const FAIL_THRESHOLD = 30;
+      const WRONG_PENALTY = 15;
+      const HINT_PENALTY = 8;
+      const DIFFICULTIES = {
+        easy: { label: "简单", holes: 38 },
+        medium: { label: "中等", holes: 46 },
+        hard: { label: "困难", holes: 54 },
+      };
+      const SCORE_KEY = "sudoku-party-scores-v2";
+
+      const boardEl = document.getElementById("board");
+      const numPadEl = document.getElementById("numPad");
+      const difficultyRowEl = document.getElementById("difficultyRow");
+      const statusEl = document.getElementById("status");
+      const toastEl = document.getElementById("toast");
+      const metaEl = document.getElementById("meta");
+      const timerEl = document.getElementById("timer");
+      const scoreEl = document.getElementById("score");
+      const filledEl = document.getElementById("filled");
+      const bestEl = document.getElementById("best");
+      const dangerEl = document.getElementById("danger");
+      const leaderboardEl = document.getElementById("leaderboard");
+      const noteModeBtn = document.getElementById("noteMode");
+      const undoBtn = document.getElementById("undo");
+      const redoBtn = document.getElementById("redo");
+      const fireworksCanvas = document.getElementById("fireworks");
+      const fireworksCtx = fireworksCanvas.getContext("2d");
+      const victoryBannerEl = document.getElementById("victoryBanner");
+
+      let cells = [];
+      let solution = [];
+      let puzzle = [];
+      let state = [];
+      let fixed = [];
+      let notes = [];
+      let selected = -1;
+      let gameSeed = 0;
+      let difficulty = "medium";
+      let startedAt = 0;
+      let elapsedSeconds = 0;
+      let timer = null;
+      let completed = false;
+      let failed = false;
+      let noteMode = false;
+      let penaltyPoints = 0;
+      let score = START_SCORE;
+      let undoStack = [];
+      let redoStack = [];
+      let audioCtx = null;
+      let audioReady = false;
+
+      function resizeFireworks() {
+        fireworksCanvas.width = window.innerWidth;
+        fireworksCanvas.height = window.innerHeight;
+      }
+
+      window.addEventListener("resize", resizeFireworks);
+      resizeFireworks();
+
+      function ensureAudio() {
+        if (!audioCtx) {
+          const Ctx = window.AudioContext || window.webkitAudioContext;
+          if (!Ctx) return false;
+          audioCtx = new Ctx();
+        }
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        audioReady = true;
+        return true;
+      }
+
+      function playTone(freq, duration, type = "sine", volume = 0.045, when = 0) {
+        if (!audioReady && !ensureAudio()) return;
+        const now = audioCtx.currentTime + when;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, now);
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(volume, now + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + duration + 0.02);
+      }
+
+      function playSfx(name) {
+        if (!audioReady && !ensureAudio()) return;
+        if (name === "fill-ok") {
+          playTone(660, 0.09, "triangle", 0.04);
+          playTone(880, 0.1, "triangle", 0.035, 0.06);
+        } else if (name === "erase") {
+          playTone(420, 0.06, "square", 0.03);
+        } else if (name === "note") {
+          playTone(720, 0.05, "sine", 0.02);
+        } else if (name === "wrong") {
+          playTone(220, 0.14, "sawtooth", 0.05);
+          playTone(170, 0.12, "sawtooth", 0.04, 0.05);
+        } else if (name === "hint") {
+          playTone(540, 0.07, "triangle", 0.03);
+          playTone(680, 0.08, "triangle", 0.03, 0.07);
+        } else if (name === "undo") {
+          playTone(500, 0.05, "sine", 0.02);
+        } else if (name === "redo") {
+          playTone(620, 0.05, "sine", 0.02);
+        } else if (name === "fail") {
+          playTone(210, 0.2, "sawtooth", 0.055);
+          playTone(140, 0.22, "sawtooth", 0.05, 0.1);
+        } else if (name === "win") {
+          playTone(523, 0.09, "triangle", 0.04);
+          playTone(659, 0.09, "triangle", 0.04, 0.1);
+          playTone(784, 0.12, "triangle", 0.045, 0.2);
+          playTone(1047, 0.16, "triangle", 0.045, 0.34);
+        }
+      }
+
+      function mulberry32(seed) {
+        let a = seed >>> 0;
+        return function () {
+          a += 0x6d2b79f5;
+          let t = a;
+          t = Math.imul(t ^ (t >>> 15), t | 1);
+          t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+          return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
+      }
+
+      function shuffle(arr, rand) {
+        const out = arr.slice();
+        for (let i = out.length - 1; i > 0; i -= 1) {
+          const j = Math.floor(rand() * (i + 1));
+          [out[i], out[j]] = [out[j], out[i]];
+        }
+        return out;
+      }
+
+      function formatSeconds(s) {
+        const m = Math.floor(s / 60);
+        const sec = s % 60;
+        return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+      }
+
+      function updateTimer() {
+        timerEl.textContent = `计时：${formatSeconds(elapsedSeconds)}`;
+      }
+
+      function recomputeScore() {
+        score = Math.max(0, START_SCORE - penaltyPoints);
+        scoreEl.textContent = `得分：${score}`;
+        dangerEl.textContent = `失败阈值：${FAIL_THRESHOLD}`;
+      }
+
+      function tickTimer() {
+        if (!startedAt || completed || failed) return;
+        elapsedSeconds = Math.floor((Date.now() - startedAt) / 1000);
+        updateTimer();
+      }
+
+      function startTimer(fromSeconds = 0) {
+        if (timer) clearInterval(timer);
+        elapsedSeconds = fromSeconds;
+        startedAt = Date.now() - fromSeconds * 1000;
+        updateTimer();
+        timer = setInterval(tickTimer, 1000);
+      }
+
+      function stopTimer() {
+        if (timer) {
+          clearInterval(timer);
+          timer = null;
+        }
+      }
+
+      function canPlace(grid, idx, n) {
+        const r = Math.floor(idx / SIZE);
+        const c = idx % SIZE;
+
+        for (let i = 0; i < SIZE; i += 1) {
+          if (grid[r * SIZE + i] === n) return false;
+          if (grid[i * SIZE + c] === n) return false;
+        }
+
+        const br = Math.floor(r / BOX) * BOX;
+        const bc = Math.floor(c / BOX) * BOX;
+        for (let rr = br; rr < br + BOX; rr += 1) {
+          for (let cc = bc; cc < bc + BOX; cc += 1) {
+            if (grid[rr * SIZE + cc] === n) return false;
+          }
+        }
+
+        return true;
+      }
+
+      function fillSudoku(rand, grid = new Array(81).fill(0), idx = 0) {
+        while (idx < 81 && grid[idx] !== 0) idx += 1;
+        if (idx === 81) return true;
+
+        const picks = shuffle(DIGITS, rand);
+        for (const n of picks) {
+          if (!canPlace(grid, idx, n)) continue;
+          grid[idx] = n;
+          if (fillSudoku(rand, grid, idx + 1)) return true;
+          grid[idx] = 0;
+        }
+        return false;
+      }
+
+      function generate(seed, holes) {
+        const rand = mulberry32(seed);
+        const solved = new Array(81).fill(0);
+        fillSudoku(rand, solved, 0);
+
+        const puzzleGrid = solved.slice();
+        const indexes = shuffle([...Array(81).keys()], rand);
+        for (let i = 0; i < holes; i += 1) {
+          puzzleGrid[indexes[i]] = 0;
+        }
+
+        return { solved, puzzle: puzzleGrid };
+      }
+
+      function getPeers(index) {
+        const r = Math.floor(index / SIZE);
+        const c = index % SIZE;
+        const peers = new Set();
+
+        for (let i = 0; i < SIZE; i += 1) {
+          peers.add(r * SIZE + i);
+          peers.add(i * SIZE + c);
+        }
+
+        const br = Math.floor(r / BOX) * BOX;
+        const bc = Math.floor(c / BOX) * BOX;
+        for (let rr = br; rr < br + BOX; rr += 1) {
+          for (let cc = bc; cc < bc + BOX; cc += 1) {
+            peers.add(rr * SIZE + cc);
+          }
+        }
+
+        peers.delete(index);
+        return peers;
+      }
+
+      function conflictIndexes() {
+        const bad = new Set();
+
+        for (let i = 0; i < 81; i += 1) {
+          if (state[i] === 0) continue;
+          const v = state[i];
+          for (const p of getPeers(i)) {
+            if (state[p] === v) {
+              bad.add(i);
+              bad.add(p);
+            }
+          }
+        }
+
+        return bad;
+      }
+
+      function checkWin() {
+        if (state.includes(0)) return false;
+        for (let i = 0; i < 81; i += 1) {
+          if (state[i] !== solution[i]) return false;
+        }
+        return true;
+      }
+
+      function setToast(msg, isGood = false) {
+        toastEl.textContent = msg;
+        toastEl.style.color = isGood ? "#198754" : "#b23a48";
+      }
+
+      function makeEmptyNotes() {
+        return new Array(81).fill(0);
+      }
+
+      function noteDigits(mask) {
+        let out = "";
+        for (let n = 1; n <= 9; n += 1) {
+          const bit = 1 << (n - 1);
+          if (mask & bit) out += String(n);
+        }
+        return out;
+      }
+
+      function toggleNote(index, n) {
+        const bit = 1 << (n - 1);
+        notes[index] = notes[index] ^ bit;
+      }
+
+      function snapshot() {
+        return {
+          state: state.slice(),
+          notes: notes.slice(),
+          penaltyPoints,
+          elapsedSeconds,
+          completed,
+          failed,
+          selected,
+        };
+      }
+
+      function saveHistory() {
+        undoStack.push(snapshot());
+        if (undoStack.length > 200) undoStack.shift();
+        redoStack = [];
+      }
+
+      function restoreSnapshot(snap) {
+        state = snap.state.slice();
+        notes = snap.notes.slice();
+        penaltyPoints = snap.penaltyPoints;
+        elapsedSeconds = snap.elapsedSeconds;
+        completed = snap.completed;
+        failed = snap.failed;
+        selected = snap.selected;
+        recomputeScore();
+
+        if (!completed && !failed) startTimer(elapsedSeconds);
+        else stopTimer();
+
+        render();
+      }
+
+      function undo() {
+        if (undoStack.length === 0) {
+          setToast("没有可撤销的操作。", false);
+          return;
+        }
+        redoStack.push(snapshot());
+        const snap = undoStack.pop();
+        restoreSnapshot(snap);
+        playSfx("undo");
+        setToast("已撤销一步。", true);
+      }
+
+      function redo() {
+        if (redoStack.length === 0) {
+          setToast("没有可重做的操作（先撤销一步）。", false);
+          return;
+        }
+        undoStack.push(snapshot());
+        const snap = redoStack.pop();
+        restoreSnapshot(snap);
+        playSfx("redo");
+        setToast("已重做一步。", true);
+      }
+
+      function vibrateWarn() {
+        if (navigator.vibrate) navigator.vibrate([120, 50, 120]);
+        boardEl.classList.remove("shake");
+        void boardEl.offsetWidth;
+        boardEl.classList.add("shake");
+      }
+
+      function applyPenalty(points, message, sfx = "wrong") {
+        penaltyPoints += points;
+        recomputeScore();
+        vibrateWarn();
+        playSfx(sfx);
+        setToast(`${message}（-${points}分）`, false);
+
+        if (!failed && score <= FAIL_THRESHOLD) {
+          failed = true;
+          stopTimer();
+          playSfx("fail");
+          statusEl.textContent = "分数跌破阈值，本局失败。点“新布局”再来。";
+          setToast("游戏失败：扣分过多。", false);
+        }
+      }
+
+      function maybeWin() {
+        if (!completed && !failed && checkWin()) {
+          completed = true;
+          tickTimer();
+          stopTimer();
+          pushScore(difficulty, elapsedSeconds, score);
+          renderLeaderboard();
+          playSfx("win");
+          setToast(`你通关啦！用时 ${formatSeconds(elapsedSeconds)}，得分 ${score}。`, true);
+          statusEl.textContent = "完美解出这盘数独。";
+          launchFireworks();
+        }
+      }
+
+      function readScores() {
+        try {
+          const data = localStorage.getItem(SCORE_KEY);
+          if (!data) return { easy: [], medium: [], hard: [] };
+          const parsed = JSON.parse(data);
+          const out = { easy: [], medium: [], hard: [] };
+          ["easy", "medium", "hard"].forEach((k) => {
+            const raw = Array.isArray(parsed[k]) ? parsed[k] : [];
+            out[k] = raw
+              .map((entry) => {
+                if (typeof entry === "number") return { time: entry, score: START_SCORE };
+                if (entry && Number.isFinite(entry.time) && Number.isFinite(entry.score)) {
+                  return { time: Math.floor(entry.time), score: Math.floor(entry.score) };
+                }
+                return null;
+              })
+              .filter(Boolean)
+              .slice(0, 5);
+          });
+          return out;
+        } catch {
+          return { easy: [], medium: [], hard: [] };
+        }
+      }
+
+      function writeScores(scores) {
+        localStorage.setItem(SCORE_KEY, JSON.stringify(scores));
+      }
+
+      function pushScore(diff, sec, finalScore) {
+        const scores = readScores();
+        const list = scores[diff] || [];
+        list.push({ time: sec, score: finalScore });
+        list.sort((a, b) => {
+          if (a.time !== b.time) return a.time - b.time;
+          return b.score - a.score;
+        });
+        scores[diff] = list.slice(0, 5);
+        writeScores(scores);
+      }
+
+      function renderLeaderboard() {
+        const scores = readScores();
+        const list = scores[difficulty] || [];
+        leaderboardEl.innerHTML = "";
+        if (list.length === 0) {
+          const li = document.createElement("li");
+          li.textContent = "还没有成绩，快冲一把。";
+          leaderboardEl.appendChild(li);
+          bestEl.textContent = "最佳：--:--";
+          return;
+        }
+
+        list.forEach((entry, i) => {
+          const li = document.createElement("li");
+          li.textContent = `#${i + 1} ${formatSeconds(entry.time)} ｜ ${entry.score}分`;
+          leaderboardEl.appendChild(li);
+        });
+        bestEl.textContent = `最佳：${formatSeconds(list[0].time)} ｜ ${list[0].score}分`;
+      }
+
+      function updateProgressLabel() {
+        const filled = state.filter((v) => v !== 0).length;
+        filledEl.textContent = `已填：${filled}/81`;
+      }
+
+      function renderDifficultyButtons() {
+        Array.from(difficultyRowEl.querySelectorAll("button")).forEach((btn) => {
+          btn.classList.toggle("active", btn.dataset.diff === difficulty);
+        });
+      }
+
+      function renderActionButtons() {
+        noteModeBtn.classList.toggle("active", noteMode);
+        undoBtn.disabled = undoStack.length === 0;
+        redoBtn.disabled = redoStack.length === 0;
+        undoBtn.title = "撤销上一步";
+        redoBtn.title = "重做被撤销的一步";
+      }
+
+      function render() {
+        const bad = conflictIndexes();
+        const peers = selected >= 0 ? getPeers(selected) : new Set();
+
+        cells.forEach((cell, i) => {
+          cell.className = "cell";
+          if (fixed[i]) cell.classList.add("fixed");
+          else if (state[i] !== 0) cell.classList.add("input");
+
+          if (selected === i) cell.classList.add("selected");
+          else if (peers.has(i)) cell.classList.add("peer");
+
+          if (bad.has(i)) cell.classList.add("conflict");
+
+          if (!bad.has(i) && state[i] !== 0 && state[i] === solution[i]) {
+            cell.classList.add("good");
+          }
+
+          if (state[i] !== 0) {
+            cell.textContent = state[i];
+          } else if (notes[i] !== 0) {
+            cell.classList.add("note");
+            cell.textContent = noteDigits(notes[i]);
+          } else {
+            cell.textContent = "";
+          }
+        });
+
+        recomputeScore();
+        renderActionButtons();
+        updateProgressLabel();
+        updateUrl(gameSeed, difficulty, state, elapsedSeconds, notes, penaltyPoints);
+
+        if (failed) {
+          statusEl.textContent = "分数跌破阈值，本局失败。";
+        } else if (selected < 0) {
+          statusEl.textContent = noteMode ? "笔记模式已开启，点击空格后输入数字。" : "点击一个空格开始。";
+        } else if (fixed[selected]) {
+          statusEl.textContent = "这是预设数字，不能修改。";
+        } else {
+          const mode = noteMode ? "（笔记模式）" : "";
+          statusEl.textContent = `第 ${Math.floor(selected / 9) + 1} 行，第 ${(selected % 9) + 1} 列${mode}`;
+        }
+
+        maybeWin();
+      }
+
+      function writeNumber(n) {
+        if (selected < 0 || fixed[selected] || completed || failed) return;
+        saveHistory();
+
+        if (noteMode && state[selected] === 0) {
+          toggleNote(selected, n);
+          playSfx("note");
+          setToast("候选数已更新。", true);
+          render();
+          return;
+        }
+
+        if (solution[selected] !== n) {
+          applyPenalty(WRONG_PENALTY, "填写错误，已扣分", "wrong");
+          render();
+          return;
+        }
+
+        state[selected] = n;
+        notes[selected] = 0;
+        playSfx("fill-ok");
+        setToast("填写正确。", true);
+        render();
+      }
+
+      function erase() {
+        if (selected < 0 || fixed[selected] || completed || failed) return;
+        saveHistory();
+        state[selected] = 0;
+        notes[selected] = 0;
+        playSfx("erase");
+        setToast("已擦除该格。", true);
+        render();
+      }
+
+      function giveHint() {
+        if (completed || failed) return;
+        const editable = [...Array(81).keys()].filter((i) => !fixed[i] && state[i] !== solution[i]);
+        if (editable.length === 0) {
+          setToast("没有可提示的格子。", true);
+          return;
+        }
+
+        saveHistory();
+        const idx = editable[Math.floor(Math.random() * editable.length)];
+        state[idx] = solution[idx];
+        notes[idx] = 0;
+        selected = idx;
+        applyPenalty(HINT_PENALTY, "使用提示，已扣分", "hint");
+        render();
+      }
+
+      function createBoard() {
+        boardEl.innerHTML = "";
+        cells = [];
+        for (let i = 0; i < 81; i += 1) {
+          const cell = document.createElement("button");
+          cell.type = "button";
+          cell.className = "cell";
+          cell.dataset.row = String(Math.floor(i / 9));
+          cell.dataset.col = String(i % 9);
+          cell.addEventListener("click", () => {
+            selected = i;
+            render();
+          });
+          boardEl.appendChild(cell);
+          cells.push(cell);
+        }
+      }
+
+      function createNumPad() {
+        numPadEl.innerHTML = "";
+        for (const n of DIGITS) {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "num-btn";
+          btn.textContent = String(n);
+          btn.addEventListener("click", () => writeNumber(n));
+          numPadEl.appendChild(btn);
+        }
+      }
+
+      function createDifficultyButtons() {
+        difficultyRowEl.innerHTML = "";
+        Object.keys(DIFFICULTIES).forEach((k) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.dataset.diff = k;
+          btn.textContent = DIFFICULTIES[k].label;
+          btn.addEventListener("click", () => {
+            difficulty = k;
+            renderDifficultyButtons();
+            renderLeaderboard();
+            loadGame((Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0);
+          });
+          difficultyRowEl.appendChild(btn);
+        });
+      }
+
+      function encodeState(arr) {
+        return arr.map((n) => String(n)).join("");
+      }
+
+      function decodeState(text) {
+        if (!text || text.length !== 81 || !/^[0-9]+$/.test(text)) return null;
+        return text.split("").map((c) => Number(c));
+      }
+
+      function encodeNotes(arr) {
+        return arr.map((n) => n.toString(36).padStart(2, "0")).join("");
+      }
+
+      function decodeNotes(text) {
+        if (!text || text.length !== 162 || !/^[0-9a-z]+$/.test(text)) return null;
+        const out = [];
+        for (let i = 0; i < 162; i += 2) {
+          const val = Number.parseInt(text.slice(i, i + 2), 36);
+          if (!Number.isFinite(val) || val < 0 || val > 511) return null;
+          out.push(val);
+        }
+        return out;
+      }
+
+      function updateUrl(seed, diff, progress, elapsed, noteArr, penalty) {
+        const url = new URL(window.location.href);
+        url.searchParams.set("seed", String(seed));
+        url.searchParams.set("diff", diff);
+        if (progress) url.searchParams.set("state", encodeState(progress));
+        else url.searchParams.delete("state");
+
+        if (noteArr) url.searchParams.set("notes", encodeNotes(noteArr));
+        else url.searchParams.delete("notes");
+
+        if (typeof elapsed === "number") url.searchParams.set("t", String(elapsed));
+        else url.searchParams.delete("t");
+
+        if (typeof penalty === "number") url.searchParams.set("p", String(penalty));
+        else url.searchParams.delete("p");
+
+        history.replaceState({}, "", url);
+      }
+
+      function loadGame(seed, options = {}) {
+        gameSeed = seed >>> 0;
+        const holes = DIFFICULTIES[difficulty].holes;
+        const { solved, puzzle: p } = generate(gameSeed, holes);
+        solution = solved;
+        puzzle = p;
+        state = p.slice();
+        fixed = p.map((v) => v !== 0);
+        notes = makeEmptyNotes();
+        selected = -1;
+        completed = false;
+        failed = false;
+        noteMode = false;
+        undoStack = [];
+        redoStack = [];
+        document.body.classList.remove("victory-flash");
+        victoryBannerEl.classList.remove("show");
+
+        if (Array.isArray(options.progress) && options.progress.length === 81) {
+          for (let i = 0; i < 81; i += 1) {
+            if (!fixed[i] && options.progress[i] >= 0 && options.progress[i] <= 9) {
+              state[i] = options.progress[i];
+            }
+          }
+        }
+
+        if (Array.isArray(options.notes) && options.notes.length === 81) {
+          for (let i = 0; i < 81; i += 1) {
+            if (!fixed[i] && state[i] === 0) notes[i] = options.notes[i] & 511;
+          }
+        }
+
+        penaltyPoints = Number.isFinite(options.penaltyPoints) && options.penaltyPoints >= 0 ? Math.floor(options.penaltyPoints) : 0;
+        recomputeScore();
+
+        const initialSeconds = Number.isFinite(options.elapsed) && options.elapsed >= 0 ? Math.floor(options.elapsed) : 0;
+        if (score <= FAIL_THRESHOLD) {
+          failed = true;
+          elapsedSeconds = initialSeconds;
+          updateTimer();
+          stopTimer();
+        } else {
+          startTimer(initialSeconds);
+        }
+
+        updateUrl(gameSeed, difficulty, state, elapsedSeconds, notes, penaltyPoints);
+        metaEl.textContent = `难度：${DIFFICULTIES[difficulty].label} ｜ Seed: ${gameSeed}`;
+        setToast(options.restore ? "已恢复你分享的进度。" : "布局已生成，祝你玩得开心！", true);
+        renderDifficultyButtons();
+        renderLeaderboard();
+        render();
+      }
+
+      function launchFireworks() {
+        const colors = ["#ff595e", "#ffca3a", "#8ac926", "#1982c4", "#6a4c93", "#ff924c"];
+        const particles = [];
+        const confetti = [];
+        const bursts = 8;
+
+        document.body.classList.add("victory-flash");
+        victoryBannerEl.classList.remove("show");
+        void victoryBannerEl.offsetWidth;
+        victoryBannerEl.classList.add("show");
+        setTimeout(() => {
+          document.body.classList.remove("victory-flash");
+          victoryBannerEl.classList.remove("show");
+        }, 1800);
+
+        for (let b = 0; b < bursts; b += 1) {
+          const cx = Math.random() * fireworksCanvas.width;
+          const cy = Math.random() * (fireworksCanvas.height * 0.55);
+          const count = 38;
+          for (let i = 0; i < count; i += 1) {
+            const angle = (Math.PI * 2 * i) / count;
+            const speed = 1 + Math.random() * 4;
+            particles.push({
+              x: cx,
+              y: cy,
+              vx: Math.cos(angle) * speed,
+              vy: Math.sin(angle) * speed,
+              life: 60 + Math.floor(Math.random() * 24),
+              color: colors[Math.floor(Math.random() * colors.length)],
+            });
+          }
+        }
+
+        for (let i = 0; i < 180; i += 1) {
+          confetti.push({
+            x: Math.random() * fireworksCanvas.width,
+            y: -Math.random() * fireworksCanvas.height * 0.35,
+            vx: -1 + Math.random() * 2,
+            vy: 1.4 + Math.random() * 2.4,
+            w: 4 + Math.random() * 4,
+            h: 8 + Math.random() * 8,
+            rot: Math.random() * Math.PI,
+            vr: -0.1 + Math.random() * 0.2,
+            color: colors[Math.floor(Math.random() * colors.length)],
+          });
+        }
+
+        let frame = 0;
+        function step() {
+          frame += 1;
+          fireworksCtx.clearRect(0, 0, fireworksCanvas.width, fireworksCanvas.height);
+
+          particles.forEach((p) => {
+            if (p.life <= 0) return;
+            p.life -= 1;
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.04;
+            fireworksCtx.globalAlpha = Math.max(0, p.life / 84);
+            fireworksCtx.fillStyle = p.color;
+            fireworksCtx.beginPath();
+            fireworksCtx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+            fireworksCtx.fill();
+          });
+
+          confetti.forEach((c) => {
+            c.x += c.vx;
+            c.y += c.vy;
+            c.rot += c.vr;
+            fireworksCtx.save();
+            fireworksCtx.translate(c.x, c.y);
+            fireworksCtx.rotate(c.rot);
+            fireworksCtx.fillStyle = c.color;
+            fireworksCtx.globalAlpha = frame < 110 ? 0.85 : Math.max(0, (170 - frame) / 60);
+            fireworksCtx.fillRect(-c.w / 2, -c.h / 2, c.w, c.h);
+            fireworksCtx.restore();
+          });
+
+          fireworksCtx.globalAlpha = 1;
+          if (frame < 170) {
+            requestAnimationFrame(step);
+          } else {
+            fireworksCtx.clearRect(0, 0, fireworksCanvas.width, fireworksCanvas.height);
+          }
+        }
+
+        step();
+      }
+
+      async function shareLayout() {
+        tickTimer();
+        updateUrl(gameSeed, difficulty, state, elapsedSeconds, notes, penaltyPoints);
+        const text = `来玩我这盘数独（含当前进度）：${window.location.href}`;
+
+        try {
+          if (navigator.share) {
+            await navigator.share({
+              title: "数独派对",
+              text: "这盘布局挺有意思，来试试！",
+              url: window.location.href,
+            });
+            setToast("已调用系统分享。", true);
+            return;
+          }
+
+          if (navigator.clipboard) {
+            await navigator.clipboard.writeText(text);
+            setToast("进度链接已复制到剪贴板。", true);
+            return;
+          }
+
+          throw new Error("No share or clipboard support");
+        } catch {
+          setToast("分享失败，可直接复制地址栏链接。", false);
+        }
+      }
+
+      noteModeBtn.addEventListener("click", () => {
+        noteMode = !noteMode;
+        playSfx("note");
+        render();
+      });
+      undoBtn.addEventListener("click", undo);
+      redoBtn.addEventListener("click", redo);
+      document.getElementById("erase").addEventListener("click", erase);
+      document.getElementById("hint").addEventListener("click", giveHint);
+      document.getElementById("newGame").addEventListener("click", () => {
+        loadGame((Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0);
+      });
+      document.getElementById("share").addEventListener("click", shareLayout);
+      document.addEventListener("pointerdown", ensureAudio, { passive: true });
+
+      document.addEventListener("keydown", (e) => {
+        ensureAudio();
+        if (e.key >= "1" && e.key <= "9") {
+          writeNumber(Number(e.key));
+        } else if (e.key === "Backspace" || e.key === "Delete" || e.key === "0") {
+          erase();
+        } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
+          if (e.shiftKey) redo();
+          else undo();
+        } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") {
+          redo();
+        } else if (e.key.toLowerCase() === "n") {
+          noteMode = !noteMode;
+          render();
+        } else if (e.key === "ArrowUp" && selected >= 9) {
+          selected -= 9;
+          render();
+        } else if (e.key === "ArrowDown" && selected <= 71 && selected >= 0) {
+          selected += 9;
+          render();
+        } else if (e.key === "ArrowLeft" && selected > 0) {
+          selected -= 1;
+          render();
+        } else if (e.key === "ArrowRight" && selected >= 0 && selected < 80) {
+          selected += 1;
+          render();
+        }
+      });
+
+      function bootstrap() {
+        createBoard();
+        createNumPad();
+        createDifficultyButtons();
+
+        const url = new URL(window.location.href);
+        const urlSeed = Number(url.searchParams.get("seed"));
+        const urlDiff = url.searchParams.get("diff");
+        const urlState = decodeState(url.searchParams.get("state"));
+        const urlNotes = decodeNotes(url.searchParams.get("notes"));
+        const urlElapsed = Number(url.searchParams.get("t"));
+        const urlPenalty = Number(url.searchParams.get("p"));
+
+        if (urlDiff && DIFFICULTIES[urlDiff]) difficulty = urlDiff;
+
+        const startSeed = Number.isFinite(urlSeed) && urlSeed > 0 ? urlSeed : (Date.now() >>> 0);
+        loadGame(startSeed, {
+          progress: urlState,
+          notes: urlNotes,
+          elapsed: Number.isFinite(urlElapsed) ? urlElapsed : 0,
+          penaltyPoints: Number.isFinite(urlPenalty) ? urlPenalty : 0,
+          restore: Boolean(urlState || urlNotes),
+        });
+      }
+
+      window.addEventListener("beforeunload", () => {
+        updateUrl(gameSeed, difficulty, state, elapsedSeconds, notes, penaltyPoints);
+      });
+
+      setInterval(() => {
+        if (!completed && !failed) updateUrl(gameSeed, difficulty, state, elapsedSeconds, notes, penaltyPoints);
+      }, 2000);
+
+      bootstrap();
+    </script>
+  </body>
+</html>
