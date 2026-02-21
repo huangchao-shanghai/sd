@@ -207,16 +207,12 @@
       }
 
       .settings-panel {
-        display: none;
+        display: grid;
         gap: 10px;
         padding: 10px;
         border: 1px dashed #00000026;
         border-radius: 12px;
         background: #ffffffa8;
-      }
-
-      .settings-panel.open {
-        display: grid;
       }
 
       .num-pad {
@@ -408,6 +404,39 @@
         flex-wrap: wrap;
       }
 
+      .settings-modal .modal-card {
+        width: min(700px, 100%);
+        max-height: min(86vh, 760px);
+        display: grid;
+        grid-template-rows: auto 1fr;
+        padding: 0;
+        overflow: hidden;
+      }
+
+      .settings-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 14px 16px;
+        border-bottom: 1px solid #00000012;
+      }
+
+      .settings-modal-header h3 {
+        margin: 0;
+      }
+
+      .settings-modal-body {
+        overflow: auto;
+        padding: 12px 16px 16px;
+      }
+
+      .settings-modal .settings-panel {
+        border: none;
+        background: transparent;
+        padding: 0;
+      }
+
       @media (min-width: 980px) {
         .main {
           grid-template-columns: minmax(0, 580px) minmax(320px, 1fr);
@@ -436,38 +465,13 @@
       </div>
     </div>
 
-    <div class="app">
-      <section class="panel top">
-        <h1>数独派对 Pro</h1>
-        <div class="meta-line">
-          <div class="badge" id="meta">难度：中等</div>
-          <div class="badge" id="modeBadge">模式：普通</div>
-          <div class="badge" id="dayBadge">日期：--</div>
-          <div class="badge" id="timer">计时：00:00</div>
-          <div class="badge" id="score">得分：120</div>
+    <div class="modal settings-modal" id="settingsModal" aria-modal="true" role="dialog" aria-labelledby="settingsTitle">
+      <div class="modal-card">
+        <div class="settings-modal-header">
+          <h3 id="settingsTitle">设置</h3>
+          <button id="settingsClose">关闭</button>
         </div>
-      </section>
-
-      <section class="panel main">
-        <div class="board-wrap">
-          <div class="board" id="board" aria-label="Sudoku board"></div>
-        </div>
-
-        <div class="controls">
-          <div class="difficulty-row" id="difficultyRow"></div>
-          <div class="num-pad" id="numPad"></div>
-
-          <div class="action-row">
-            <button id="noteMode"><span class="btn-ico" aria-hidden="true">✎</span>笔记模式</button>
-            <button id="undo"><span class="btn-ico" aria-hidden="true">↶</span>撤销</button>
-            <button id="redo"><span class="btn-ico" aria-hidden="true">↷</span>重做</button>
-            <button id="erase"><span class="btn-ico" aria-hidden="true">⌫</span>擦除</button>
-            <button id="hint"><span class="btn-ico" aria-hidden="true">💡</span>提示</button>
-            <button class="primary" id="newGame"><span class="btn-ico" aria-hidden="true">⟳</span>新布局</button>
-            <button class="secondary" id="share"><span class="btn-ico" aria-hidden="true">🔗</span>分享进度</button>
-            <button id="toggleSettings" aria-expanded="false"><span class="btn-ico" aria-hidden="true">⚙</span>设置</button>
-          </div>
-
+        <div class="settings-modal-body">
           <div class="settings-panel" id="settingsPanel">
             <div class="mode-row" id="modeRow">
               <button id="modeNormal">普通</button>
@@ -508,6 +512,41 @@
               <button id="importData"><span class="btn-ico" aria-hidden="true">⬆</span>导入数据</button>
               <input type="file" id="importFile" accept="application/json" hidden />
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="app">
+      <section class="panel top">
+        <h1>数独派对 Pro</h1>
+        <div class="meta-line">
+          <div class="badge" id="meta">难度：中等</div>
+          <div class="badge" id="modeBadge">模式：普通</div>
+          <div class="badge" id="dayBadge">日期：--</div>
+          <div class="badge" id="timer">计时：00:00</div>
+          <div class="badge" id="score">得分：120</div>
+        </div>
+      </section>
+
+      <section class="panel main">
+        <div class="board-wrap">
+          <div class="board" id="board" aria-label="Sudoku board"></div>
+        </div>
+
+        <div class="controls">
+          <div class="difficulty-row" id="difficultyRow"></div>
+          <div class="num-pad" id="numPad"></div>
+
+          <div class="action-row">
+            <button id="noteMode"><span class="btn-ico" aria-hidden="true">✎</span>笔记模式</button>
+            <button id="undo"><span class="btn-ico" aria-hidden="true">↶</span>撤销</button>
+            <button id="redo"><span class="btn-ico" aria-hidden="true">↷</span>重做</button>
+            <button id="erase"><span class="btn-ico" aria-hidden="true">⌫</span>擦除</button>
+            <button id="hint"><span class="btn-ico" aria-hidden="true">💡</span>提示</button>
+            <button class="primary" id="newGame"><span class="btn-ico" aria-hidden="true">⟳</span>新布局</button>
+            <button class="secondary" id="share"><span class="btn-ico" aria-hidden="true">🔗</span>分享进度</button>
+            <button id="toggleSettings" aria-expanded="false"><span class="btn-ico" aria-hidden="true">⚙</span>设置</button>
           </div>
 
           <div class="board-stats">
@@ -589,6 +628,7 @@
           "btn.import": "导入数据",
           "btn.retry": "再来一局",
           "btn.close": "关闭",
+          "settings.title": "设置",
           "label.volume": "音量",
           "diff.easy": "简单",
           "diff.medium": "中等",
@@ -701,6 +741,7 @@
           "btn.import": "Import Data",
           "btn.retry": "Play Again",
           "btn.close": "Close",
+          "settings.title": "Settings",
           "label.volume": "Volume",
           "diff.easy": "Easy",
           "diff.medium": "Medium",
@@ -804,6 +845,9 @@
         newGame: document.getElementById("newGame"),
         share: document.getElementById("share"),
         toggleSettings: document.getElementById("toggleSettings"),
+        settingsModal: document.getElementById("settingsModal"),
+        settingsTitle: document.getElementById("settingsTitle"),
+        settingsClose: document.getElementById("settingsClose"),
         settingsPanel: document.getElementById("settingsPanel"),
         modeNormal: document.getElementById("modeNormal"),
         modeDaily: document.getElementById("modeDaily"),
@@ -847,7 +891,7 @@
         completed: false,
         failed: false,
         noteMode: false,
-        settingsOpen: false,
+        settingsModalOpen: false,
         penaltyPoints: 0,
         score: Constants.START_SCORE,
         wrongCount: 0,
@@ -1422,6 +1466,8 @@
           els.langEn.textContent = "English";
           els.resultRetry.textContent = t("btn.retry");
           els.resultClose.textContent = t("btn.close");
+          els.settingsTitle.textContent = t("settings.title");
+          els.settingsClose.textContent = t("btn.close");
           els.volumeLabel.textContent = t("label.volume");
 
           for (const btn of els.effectRow.querySelectorAll("button")) {
@@ -1474,9 +1520,8 @@
           els.redo.disabled = GameState.redoStack.length === 0;
           els.undo.title = t("btn.undo");
           els.redo.title = t("btn.redo");
-          els.toggleSettings.classList.toggle("active", GameState.settingsOpen);
-          els.toggleSettings.setAttribute("aria-expanded", String(GameState.settingsOpen));
-          els.settingsPanel.classList.toggle("open", GameState.settingsOpen);
+          els.toggleSettings.classList.toggle("active", GameState.settingsModalOpen);
+          els.toggleSettings.setAttribute("aria-expanded", String(GameState.settingsModalOpen));
         },
         noteDigits(mask) {
           let out = "";
@@ -1593,6 +1638,7 @@
           els.best.textContent = t("label.best", { time: fmtSec(list[0].time), score: list[0].score });
         },
         openResultModal(title, lines) {
+          if (GameState.settingsModalOpen) this.closeSettingsModal(false);
           GameState.modalLastFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
           els.resultTitle.textContent = title;
           els.resultBody.textContent = "";
@@ -1607,9 +1653,9 @@
             els.resultRetry.focus();
           });
         },
-        modalFocusableElements() {
+        modalFocusableElements(modalEl) {
           return Array.from(
-            els.resultModal.querySelectorAll(
+            modalEl.querySelectorAll(
               'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
             )
           ).filter((node) => !node.hasAttribute("disabled"));
@@ -1621,6 +1667,23 @@
             GameState.modalLastFocused.focus();
           }
           GameState.modalLastFocused = null;
+        },
+        openSettingsModal() {
+          if (els.resultModal.classList.contains("open")) this.closeResultModal();
+          GameState.settingsModalOpen = true;
+          els.settingsModal.classList.add("open");
+          document.body.style.overflow = "hidden";
+          this.renderActionButtons();
+          requestAnimationFrame(() => {
+            els.settingsClose.focus();
+          });
+        },
+        closeSettingsModal(restoreFocus = true) {
+          GameState.settingsModalOpen = false;
+          els.settingsModal.classList.remove("open");
+          document.body.style.overflow = "";
+          this.renderActionButtons();
+          if (restoreFocus) els.toggleSettings.focus();
         },
       };
 
@@ -2412,8 +2475,8 @@
         els.hint.addEventListener("click", giveHint);
         els.share.addEventListener("click", shareProgress);
         els.toggleSettings.addEventListener("click", () => {
-          GameState.settingsOpen = !GameState.settingsOpen;
-          UI.renderActionButtons();
+          if (GameState.settingsModalOpen) UI.closeSettingsModal();
+          else UI.openSettingsModal();
         });
         els.modeNormal.addEventListener("click", () => setMode("normal"));
         els.modeDaily.addEventListener("click", () => setMode("daily"));
@@ -2477,6 +2540,10 @@
         els.resultModal.addEventListener("click", (e) => {
           if (e.target === els.resultModal) UI.closeResultModal();
         });
+        els.settingsClose.addEventListener("click", () => UI.closeSettingsModal());
+        els.settingsModal.addEventListener("click", (e) => {
+          if (e.target === els.settingsModal) UI.closeSettingsModal();
+        });
 
         document.addEventListener("keydown", (e) => {
           if (els.resultModal.classList.contains("open")) {
@@ -2486,7 +2553,37 @@
               return;
             }
             if (e.key === "Tab") {
-              const focusables = UI.modalFocusableElements();
+              const focusables = UI.modalFocusableElements(els.resultModal);
+              if (focusables.length === 0) return;
+              const first = focusables[0];
+              const last = focusables[focusables.length - 1];
+              const active = document.activeElement;
+              if (!focusables.includes(active)) {
+                e.preventDefault();
+                (e.shiftKey ? last : first).focus();
+                return;
+              }
+              if (e.shiftKey && active === first) {
+                e.preventDefault();
+                last.focus();
+                return;
+              }
+              if (!e.shiftKey && active === last) {
+                e.preventDefault();
+                first.focus();
+                return;
+              }
+            }
+            return;
+          }
+          if (GameState.settingsModalOpen) {
+            if (e.key === "Escape") {
+              e.preventDefault();
+              UI.closeSettingsModal();
+              return;
+            }
+            if (e.key === "Tab") {
+              const focusables = UI.modalFocusableElements(els.settingsModal);
               if (focusables.length === 0) return;
               const first = focusables[0];
               const last = focusables[focusables.length - 1];
