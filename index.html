@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>数独派对</title>
+    <title>数独派对 Pro</title>
     <style>
       :root {
         --bg-1: #ffe8d6;
@@ -11,6 +11,7 @@
         --ink: #243447;
         --primary: #ff7b54;
         --secondary: #00a6a6;
+        --danger: #b23a48;
         --cell: #ffffffcc;
         --fixed: #243447;
         --input: #176b87;
@@ -18,6 +19,21 @@
         --peer: #fff7cf;
         --conflict: #ffcdd2;
         --ok: #d6f5de;
+        --focus: #2563eb;
+      }
+
+      body.high-contrast {
+        --bg-1: #f8fafc;
+        --bg-2: #dbeafe;
+        --ink: #0b132b;
+        --cell: #ffffff;
+        --fixed: #000000;
+        --input: #0c4a6e;
+        --selected: #fde047;
+        --peer: #fef9c3;
+        --conflict: #fca5a5;
+        --ok: #86efac;
+        --focus: #000000;
       }
 
       * {
@@ -37,8 +53,12 @@
         padding: 16px;
       }
 
+      body.large-font {
+        font-size: 1.2em;
+      }
+
       .app {
-        width: min(980px, 100%);
+        width: min(1100px, 100%);
         display: grid;
         gap: 16px;
       }
@@ -73,6 +93,12 @@
       }
 
       .meta-line {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .mode-row {
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
@@ -133,6 +159,22 @@
         letter-spacing: 0.03em;
       }
 
+      body.large-font .cell {
+        font-size: clamp(1.15rem, 2.6vw, 1.8rem);
+      }
+
+      body.large-font .cell.note {
+        font-size: clamp(0.66rem, 1.4vw, 0.92rem);
+      }
+
+      .cell:focus-visible,
+      button:focus-visible,
+      input:focus-visible,
+      select:focus-visible {
+        outline: 3px solid var(--focus);
+        outline-offset: -2px;
+      }
+
       .cell[data-col="2"],
       .cell[data-col="5"] {
         border-right: 3px solid var(--ink);
@@ -143,44 +185,38 @@
         border-bottom: 3px solid var(--ink);
       }
 
-      .cell.fixed {
-        color: var(--fixed);
-      }
-
-      .cell.input {
-        color: var(--input);
-      }
-
-      .cell.selected {
-        background: var(--selected);
-      }
-
-      .cell.peer {
-        background: var(--peer);
-      }
-
-      .cell.conflict {
-        background: var(--conflict);
-      }
-
-      .cell.good {
-        background: var(--ok);
-      }
+      .cell.fixed { color: var(--fixed); }
+      .cell.input { color: var(--input); }
+      .cell.selected { background: var(--selected); }
+      .cell.peer { background: var(--peer); }
+      .cell.conflict { background: var(--conflict); }
+      .cell.good { background: var(--ok); }
 
       .controls {
         display: grid;
         gap: 10px;
       }
 
-      .difficulty-row {
+      .difficulty-row,
+      .settings-row,
+      .mode-row,
+      .effect-row {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 6px;
       }
 
-      .difficulty-row button.active {
-        background: #172b4d;
-        color: #fff;
+      .settings-panel {
+        display: none;
+        gap: 10px;
+        padding: 10px;
+        border: 1px dashed #00000026;
+        border-radius: 12px;
+        background: #ffffffa8;
+      }
+
+      .settings-panel.open {
+        display: grid;
       }
 
       .num-pad {
@@ -189,24 +225,22 @@
         gap: 6px;
       }
 
-      button {
+      button,
+      select,
+      input[type="range"] {
         border: none;
         border-radius: 10px;
         background: #fff;
         color: var(--ink);
         padding: 10px;
         font-weight: 700;
-        cursor: pointer;
         border: 1px solid #0000001c;
       }
 
-      button:hover {
-        transform: translateY(-1px);
-      }
+      button { cursor: pointer; }
 
-      button:active {
-        transform: translateY(0);
-      }
+      button:hover { transform: translateY(-1px); }
+      button:active { transform: translateY(0); }
 
       button:disabled {
         opacity: 0.45;
@@ -214,9 +248,16 @@
         transform: none;
       }
 
-      .num-btn {
-        min-height: 44px;
+      .difficulty-row button.active,
+      .mode-row button.active,
+      .effect-row button.active,
+      .action-row button.active,
+      .settings-row button.active {
+        background: #172b4d;
+        color: #fff;
       }
+
+      .num-btn { min-height: 44px; }
 
       .btn-ico {
         display: inline-block;
@@ -231,11 +272,6 @@
         gap: 8px;
       }
 
-      .action-row button.active {
-        background: #172b4d;
-        color: #fff;
-      }
-
       .primary {
         background: var(--primary);
         color: #fff;
@@ -247,8 +283,18 @@
       }
 
       .warn {
-        background: #b23a48;
+        background: var(--danger);
         color: #fff;
+      }
+
+      .slider-wrap {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .slider-wrap input {
+        width: 100%;
       }
 
       .info {
@@ -284,9 +330,7 @@
         padding-left: 18px;
       }
 
-      .leaderboard li {
-        margin: 2px 0;
-      }
+      .leaderboard li { margin: 2px 0; }
 
       #fireworks {
         position: fixed;
@@ -312,9 +356,7 @@
         pointer-events: none;
       }
 
-      #victoryBanner.show {
-        animation: banner-pop 1.2s ease-out;
-      }
+      #victoryBanner.show { animation: banner-pop 1.2s ease-out; }
 
       @keyframes banner-pop {
         0% { opacity: 0; transform: translateX(-50%) scale(0.65) translateY(30px); }
@@ -323,9 +365,7 @@
         100% { opacity: 0; transform: translateX(-50%) scale(0.95) translateY(-18px); }
       }
 
-      body.victory-flash .panel {
-        animation: victory-glow 0.9s ease-out 2;
-      }
+      body.victory-flash .panel { animation: victory-glow 0.9s ease-out 2; }
 
       @keyframes victory-glow {
         0% { box-shadow: 0 8px 20px #00000014; }
@@ -333,9 +373,44 @@
         100% { box-shadow: 0 8px 20px #00000014; }
       }
 
-      @media (min-width: 860px) {
+      .modal {
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: #00000066;
+        z-index: 40;
+        padding: 16px;
+      }
+
+      .modal.open { display: flex; }
+
+      .modal-card {
+        width: min(540px, 100%);
+        background: #ffffff;
+        border-radius: 14px;
+        padding: 16px;
+        box-shadow: 0 16px 36px #00000030;
+      }
+
+      .modal h3 {
+        margin: 0 0 10px;
+        font-size: 1.3rem;
+      }
+
+      .modal p { margin: 6px 0; }
+
+      .modal-actions {
+        margin-top: 12px;
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      @media (min-width: 980px) {
         .main {
-          grid-template-columns: minmax(0, 580px) minmax(280px, 1fr);
+          grid-template-columns: minmax(0, 580px) minmax(320px, 1fr);
           align-items: start;
         }
 
@@ -349,11 +424,25 @@
   <body>
     <canvas id="fireworks"></canvas>
     <div id="victoryBanner">Perfect! 数独通关</div>
+
+    <div class="modal" id="resultModal" aria-modal="true" role="dialog">
+      <div class="modal-card">
+        <h3 id="resultTitle">结果</h3>
+        <div id="resultBody"></div>
+        <div class="modal-actions">
+          <button id="resultRetry" class="primary">再来一局</button>
+          <button id="resultClose">关闭</button>
+        </div>
+      </div>
+    </div>
+
     <div class="app">
       <section class="panel top">
-        <h1>数独派对</h1>
+        <h1>数独派对 Pro</h1>
         <div class="meta-line">
           <div class="badge" id="meta">难度：中等</div>
+          <div class="badge" id="modeBadge">模式：普通</div>
+          <div class="badge" id="dayBadge">日期：--</div>
           <div class="badge" id="timer">计时：00:00</div>
           <div class="badge" id="score">得分：120</div>
         </div>
@@ -367,6 +456,7 @@
         <div class="controls">
           <div class="difficulty-row" id="difficultyRow"></div>
           <div class="num-pad" id="numPad"></div>
+
           <div class="action-row">
             <button id="noteMode"><span class="btn-ico" aria-hidden="true">✎</span>笔记模式</button>
             <button id="undo"><span class="btn-ico" aria-hidden="true">↶</span>撤销</button>
@@ -375,16 +465,57 @@
             <button id="hint"><span class="btn-ico" aria-hidden="true">💡</span>提示</button>
             <button class="primary" id="newGame"><span class="btn-ico" aria-hidden="true">⟳</span>新布局</button>
             <button class="secondary" id="share"><span class="btn-ico" aria-hidden="true">🔗</span>分享进度</button>
+            <button id="toggleSettings" aria-expanded="false"><span class="btn-ico" aria-hidden="true">⚙</span>设置</button>
           </div>
+
+          <div class="settings-panel" id="settingsPanel">
+            <div class="mode-row" id="modeRow">
+              <button id="modeNormal">普通</button>
+              <button id="modeDaily">每日挑战</button>
+              <button id="copyDailyLink"><span class="btn-ico" aria-hidden="true">🔗</span>复制今日链接</button>
+            </div>
+
+            <div class="action-row">
+              <button id="autoCandidates"><span class="btn-ico" aria-hidden="true">⚙</span>自动候选</button>
+              <button id="clearCandidates"><span class="btn-ico" aria-hidden="true">⊘</span>清空候选</button>
+            </div>
+
+            <div class="settings-row" id="settingsRow">
+              <button id="muteBtn" aria-pressed="false"><span class="btn-ico" aria-hidden="true">🔊</span>静音</button>
+              <button id="contrastBtn" aria-pressed="false"><span class="btn-ico" aria-hidden="true">◐</span>高对比</button>
+              <button id="fontBtn" aria-pressed="false"><span class="btn-ico" aria-hidden="true">A+</span>大字号</button>
+            </div>
+
+            <div class="effect-row" id="effectRow">
+              <button data-effect="low">特效低</button>
+              <button data-effect="medium">特效中</button>
+              <button data-effect="high">特效高</button>
+            </div>
+
+            <div class="slider-wrap">
+              <span>音量</span>
+              <input type="range" id="volumeSlider" min="0" max="1" step="0.01" />
+              <span id="volumeText">70%</span>
+            </div>
+
+            <div class="action-row">
+              <button id="exportData"><span class="btn-ico" aria-hidden="true">⬇</span>导出数据</button>
+              <button id="importData"><span class="btn-ico" aria-hidden="true">⬆</span>导入数据</button>
+              <input type="file" id="importFile" accept="application/json" hidden />
+            </div>
+          </div>
+
           <div class="board-stats">
             <div class="badge" id="filled">已填：0/81</div>
             <div class="badge" id="best">最佳：--:--</div>
             <div class="badge" id="danger">失败阈值：30</div>
           </div>
+
           <div class="leaderboard">
-            <h2>本地排行榜（前 5）</h2>
+            <h2 id="leaderboardTitle">本地排行榜（前 5）</h2>
             <ol id="leaderboard"></ol>
           </div>
+
           <div class="info" id="status">点击一个空格开始。</div>
           <div class="toast" id="toast"></div>
         </div>
@@ -392,98 +523,282 @@
     </div>
 
     <script>
-      const SIZE = 9;
-      const BOX = 3;
-      const DIGITS = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-      const START_SCORE = 120;
-      const FAIL_THRESHOLD = 30;
-      const WRONG_PENALTY = 15;
-      const HINT_PENALTY = 8;
-      const DIFFICULTIES = {
-        easy: { label: "简单", holes: 38 },
-        medium: { label: "中等", holes: 46 },
-        hard: { label: "困难", holes: 54 },
+      const Constants = {
+        SIZE: 9,
+        BOX: 3,
+        DIGITS: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+        START_SCORE: 120,
+        FAIL_THRESHOLD: 30,
+        WRONG_PENALTY: 15,
+        HINT_PENALTY: 8,
+        URL_VERSION: "3",
+        EXPORT_VERSION: "sudoku-party-export-v1",
+        SCORE_KEY: "sudoku-party-scores-v3",
+        LEGACY_SCORE_KEY: "sudoku-party-scores-v2",
+        DAILY_SCORE_KEY: "sudoku-party-daily-v1",
+        SETTINGS_KEY: "sudoku-party-settings-v1",
       };
-      const SCORE_KEY = "sudoku-party-scores-v2";
 
-      const boardEl = document.getElementById("board");
-      const numPadEl = document.getElementById("numPad");
-      const difficultyRowEl = document.getElementById("difficultyRow");
-      const statusEl = document.getElementById("status");
-      const toastEl = document.getElementById("toast");
-      const metaEl = document.getElementById("meta");
-      const timerEl = document.getElementById("timer");
-      const scoreEl = document.getElementById("score");
-      const filledEl = document.getElementById("filled");
-      const bestEl = document.getElementById("best");
-      const dangerEl = document.getElementById("danger");
-      const leaderboardEl = document.getElementById("leaderboard");
-      const noteModeBtn = document.getElementById("noteMode");
-      const undoBtn = document.getElementById("undo");
-      const redoBtn = document.getElementById("redo");
-      const fireworksCanvas = document.getElementById("fireworks");
-      const fireworksCtx = fireworksCanvas.getContext("2d");
-      const victoryBannerEl = document.getElementById("victoryBanner");
+      const DIFFICULTIES = {
+        easy: { label: "简单", holes: 38, scoreRange: [0, 30], target: 20 },
+        medium: { label: "中等", holes: 46, scoreRange: [31, 80], target: 55 },
+        hard: { label: "困难", holes: 54, scoreRange: [81, 999], target: 110 },
+      };
 
-      let cells = [];
-      let solution = [];
-      let puzzle = [];
-      let state = [];
-      let fixed = [];
-      let notes = [];
-      let selected = -1;
-      let gameSeed = 0;
-      let difficulty = "medium";
-      let startedAt = 0;
-      let elapsedSeconds = 0;
-      let timer = null;
-      let completed = false;
-      let failed = false;
-      let noteMode = false;
-      let penaltyPoints = 0;
-      let score = START_SCORE;
-      let undoStack = [];
-      let redoStack = [];
-      let audioCtx = null;
-      let audioReady = false;
+      const els = {
+        body: document.body,
+        board: document.getElementById("board"),
+        numPad: document.getElementById("numPad"),
+        difficultyRow: document.getElementById("difficultyRow"),
+        status: document.getElementById("status"),
+        toast: document.getElementById("toast"),
+        meta: document.getElementById("meta"),
+        modeBadge: document.getElementById("modeBadge"),
+        dayBadge: document.getElementById("dayBadge"),
+        timer: document.getElementById("timer"),
+        score: document.getElementById("score"),
+        filled: document.getElementById("filled"),
+        best: document.getElementById("best"),
+        danger: document.getElementById("danger"),
+        leaderboard: document.getElementById("leaderboard"),
+        leaderboardTitle: document.getElementById("leaderboardTitle"),
+        noteMode: document.getElementById("noteMode"),
+        autoCandidates: document.getElementById("autoCandidates"),
+        clearCandidates: document.getElementById("clearCandidates"),
+        undo: document.getElementById("undo"),
+        redo: document.getElementById("redo"),
+        erase: document.getElementById("erase"),
+        hint: document.getElementById("hint"),
+        newGame: document.getElementById("newGame"),
+        share: document.getElementById("share"),
+        toggleSettings: document.getElementById("toggleSettings"),
+        settingsPanel: document.getElementById("settingsPanel"),
+        modeNormal: document.getElementById("modeNormal"),
+        modeDaily: document.getElementById("modeDaily"),
+        copyDailyLink: document.getElementById("copyDailyLink"),
+        muteBtn: document.getElementById("muteBtn"),
+        contrastBtn: document.getElementById("contrastBtn"),
+        fontBtn: document.getElementById("fontBtn"),
+        effectRow: document.getElementById("effectRow"),
+        volumeSlider: document.getElementById("volumeSlider"),
+        volumeText: document.getElementById("volumeText"),
+        exportData: document.getElementById("exportData"),
+        importData: document.getElementById("importData"),
+        importFile: document.getElementById("importFile"),
+        resultModal: document.getElementById("resultModal"),
+        resultTitle: document.getElementById("resultTitle"),
+        resultBody: document.getElementById("resultBody"),
+        resultRetry: document.getElementById("resultRetry"),
+        resultClose: document.getElementById("resultClose"),
+        fireworks: document.getElementById("fireworks"),
+        victoryBanner: document.getElementById("victoryBanner"),
+      };
 
-      function resizeFireworks() {
-        fireworksCanvas.width = window.innerWidth;
-        fireworksCanvas.height = window.innerHeight;
+      const GameState = {
+        cells: [],
+        solution: [],
+        puzzle: [],
+        state: [],
+        fixed: [],
+        notes: [],
+        selected: -1,
+        gameSeed: 0,
+        difficulty: "medium",
+        mode: "normal",
+        day: "",
+        startedAt: 0,
+        elapsedSeconds: 0,
+        timer: null,
+        completed: false,
+        failed: false,
+        noteMode: false,
+        settingsOpen: false,
+        penaltyPoints: 0,
+        score: Constants.START_SCORE,
+        wrongCount: 0,
+        hintCount: 0,
+        candidateUseCount: 0,
+        undoStack: [],
+        redoStack: [],
+        difficultyScore: 0,
+        difficultyTech: { naked: 0, hidden: 0, locked: 0 },
+        urlSyncTimer: null,
+        lastUrlHash: "",
+        longPressTimer: null,
+        longPressTriggered: false,
+      };
+
+      const Settings = {
+        mute: false,
+        volume: 0.7,
+        effectIntensity: "medium",
+        highContrast: false,
+        largeFont: false,
+      };
+
+      const Audio = {
+        ctx: null,
+        ready: false,
+      };
+
+      const Effects = {
+        ctx: els.fireworks.getContext("2d"),
+      };
+
+      function mulberry32(seed) {
+        let a = seed >>> 0;
+        return function () {
+          a += 0x6d2b79f5;
+          let t = a;
+          t = Math.imul(t ^ (t >>> 15), t | 1);
+          t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+          return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
       }
 
-      window.addEventListener("resize", resizeFireworks);
-      resizeFireworks();
+      function hashString(str) {
+        let h = 2166136261;
+        for (let i = 0; i < str.length; i += 1) {
+          h ^= str.charCodeAt(i);
+          h = Math.imul(h, 16777619);
+        }
+        return h >>> 0;
+      }
+
+      function localToday() {
+        const dtf = new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", day: "2-digit" });
+        const parts = dtf.formatToParts(new Date());
+        const y = parts.find((p) => p.type === "year").value;
+        const m = parts.find((p) => p.type === "month").value;
+        const d = parts.find((p) => p.type === "day").value;
+        return `${y}-${m}-${d}`;
+      }
+
+      function fmtSec(s) {
+        const m = Math.floor(s / 60);
+        const sec = s % 60;
+        return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+      }
+
+      function toast(msg, ok = false) {
+        els.toast.textContent = msg;
+        els.toast.style.color = ok ? "#198754" : "#b23a48";
+      }
+
+      function setStatus(msg) {
+        els.status.textContent = msg;
+      }
+
+      const Storage = {
+        readSettings() {
+          try {
+            const raw = localStorage.getItem(Constants.SETTINGS_KEY);
+            if (!raw) return;
+            const data = JSON.parse(raw);
+            if (typeof data.mute === "boolean") Settings.mute = data.mute;
+            if (Number.isFinite(data.volume)) Settings.volume = Math.min(1, Math.max(0, data.volume));
+            if (["low", "medium", "high"].includes(data.effectIntensity)) Settings.effectIntensity = data.effectIntensity;
+            if (typeof data.highContrast === "boolean") Settings.highContrast = data.highContrast;
+            if (typeof data.largeFont === "boolean") Settings.largeFont = data.largeFont;
+          } catch {}
+        },
+        writeSettings() {
+          localStorage.setItem(Constants.SETTINGS_KEY, JSON.stringify(Settings));
+        },
+        readScores() {
+          const base = { easy: [], medium: [], hard: [] };
+          try {
+            const raw = localStorage.getItem(Constants.SCORE_KEY);
+            if (raw) {
+              const parsed = JSON.parse(raw);
+              for (const k of ["easy", "medium", "hard"]) {
+                const list = Array.isArray(parsed[k]) ? parsed[k] : [];
+                base[k] = list
+                  .map((entry) => {
+                    if (typeof entry === "number") return { time: Math.floor(entry), score: Constants.START_SCORE };
+                    if (entry && Number.isFinite(entry.time) && Number.isFinite(entry.score)) {
+                      return { time: Math.floor(entry.time), score: Math.floor(entry.score) };
+                    }
+                    return null;
+                  })
+                  .filter(Boolean)
+                  .slice(0, 5);
+              }
+              return base;
+            }
+          } catch {}
+
+          // legacy migration
+          try {
+            const legacyRaw = localStorage.getItem(Constants.LEGACY_SCORE_KEY);
+            if (legacyRaw) {
+              const legacy = JSON.parse(legacyRaw);
+              for (const k of ["easy", "medium", "hard"]) {
+                const arr = Array.isArray(legacy[k]) ? legacy[k] : [];
+                base[k] = arr
+                  .map((x) => (typeof x === "number" ? { time: Math.floor(x), score: Constants.START_SCORE } : null))
+                  .filter(Boolean)
+                  .slice(0, 5);
+              }
+              this.writeScores(base);
+              return base;
+            }
+          } catch {}
+
+          return base;
+        },
+        writeScores(scores) {
+          localStorage.setItem(Constants.SCORE_KEY, JSON.stringify(scores));
+        },
+        readDailyScores() {
+          try {
+            const raw = localStorage.getItem(Constants.DAILY_SCORE_KEY);
+            if (!raw) return {};
+            const parsed = JSON.parse(raw);
+            return parsed && typeof parsed === "object" ? parsed : {};
+          } catch {
+            return {};
+          }
+        },
+        writeDailyScores(data) {
+          localStorage.setItem(Constants.DAILY_SCORE_KEY, JSON.stringify(data));
+        },
+      };
 
       function ensureAudio() {
-        if (!audioCtx) {
+        if (Settings.mute) return false;
+        if (!Audio.ctx) {
           const Ctx = window.AudioContext || window.webkitAudioContext;
           if (!Ctx) return false;
-          audioCtx = new Ctx();
+          Audio.ctx = new Ctx();
         }
-        if (audioCtx.state === "suspended") audioCtx.resume();
-        audioReady = true;
+        if (Audio.ctx.state === "suspended") Audio.ctx.resume();
+        Audio.ready = true;
         return true;
       }
 
-      function playTone(freq, duration, type = "sine", volume = 0.045, when = 0) {
-        if (!audioReady && !ensureAudio()) return;
-        const now = audioCtx.currentTime + when;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
+      function playTone(freq, duration, type = "sine", volume = 0.05, when = 0) {
+        if (Settings.mute) return;
+        if (!Audio.ready && !ensureAudio()) return;
+        const now = Audio.ctx.currentTime + when;
+        const osc = Audio.ctx.createOscillator();
+        const gain = Audio.ctx.createGain();
         osc.type = type;
         osc.frequency.setValueAtTime(freq, now);
+        const vol = volume * Settings.volume;
         gain.gain.setValueAtTime(0.0001, now);
-        gain.gain.exponentialRampToValueAtTime(volume, now + 0.01);
+        gain.gain.exponentialRampToValueAtTime(Math.max(0.0002, vol), now + 0.01);
         gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
         osc.connect(gain);
-        gain.connect(audioCtx.destination);
+        gain.connect(Audio.ctx.destination);
         osc.start(now);
-        osc.stop(now + duration + 0.02);
+        osc.stop(now + duration + 0.03);
       }
 
       function playSfx(name) {
-        if (!audioReady && !ensureAudio()) return;
+        if (Settings.mute) return;
+        if (!Audio.ready && !ensureAudio()) return;
+
         if (name === "fill-ok") {
           playTone(660, 0.09, "triangle", 0.04);
           playTone(880, 0.1, "triangle", 0.035, 0.06);
@@ -512,635 +827,562 @@
         }
       }
 
-      function mulberry32(seed) {
-        let a = seed >>> 0;
-        return function () {
-          a += 0x6d2b79f5;
-          let t = a;
-          t = Math.imul(t ^ (t >>> 15), t | 1);
-          t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-          return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-        };
-      }
-
-      function shuffle(arr, rand) {
-        const out = arr.slice();
-        for (let i = out.length - 1; i > 0; i -= 1) {
-          const j = Math.floor(rand() * (i + 1));
-          [out[i], out[j]] = [out[j], out[i]];
-        }
-        return out;
-      }
-
-      function formatSeconds(s) {
-        const m = Math.floor(s / 60);
-        const sec = s % 60;
-        return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
-      }
-
-      function updateTimer() {
-        timerEl.textContent = `计时：${formatSeconds(elapsedSeconds)}`;
-      }
-
-      function recomputeScore() {
-        score = Math.max(0, START_SCORE - penaltyPoints);
-        scoreEl.textContent = `得分：${score}`;
-        dangerEl.textContent = `失败阈值：${FAIL_THRESHOLD}`;
-      }
-
-      function tickTimer() {
-        if (!startedAt || completed || failed) return;
-        elapsedSeconds = Math.floor((Date.now() - startedAt) / 1000);
-        updateTimer();
-      }
-
-      function startTimer(fromSeconds = 0) {
-        if (timer) clearInterval(timer);
-        elapsedSeconds = fromSeconds;
-        startedAt = Date.now() - fromSeconds * 1000;
-        updateTimer();
-        timer = setInterval(tickTimer, 1000);
-      }
-
-      function stopTimer() {
-        if (timer) {
-          clearInterval(timer);
-          timer = null;
-        }
-      }
-
-      function canPlace(grid, idx, n) {
-        const r = Math.floor(idx / SIZE);
-        const c = idx % SIZE;
-
-        for (let i = 0; i < SIZE; i += 1) {
-          if (grid[r * SIZE + i] === n) return false;
-          if (grid[i * SIZE + c] === n) return false;
-        }
-
-        const br = Math.floor(r / BOX) * BOX;
-        const bc = Math.floor(c / BOX) * BOX;
-        for (let rr = br; rr < br + BOX; rr += 1) {
-          for (let cc = bc; cc < bc + BOX; cc += 1) {
-            if (grid[rr * SIZE + cc] === n) return false;
+      const Generator = {
+        shuffle(arr, rand) {
+          const out = arr.slice();
+          for (let i = out.length - 1; i > 0; i -= 1) {
+            const j = Math.floor(rand() * (i + 1));
+            [out[i], out[j]] = [out[j], out[i]];
           }
-        }
-
-        return true;
-      }
-
-      function fillSudoku(rand, grid = new Array(81).fill(0), idx = 0) {
-        while (idx < 81 && grid[idx] !== 0) idx += 1;
-        if (idx === 81) return true;
-
-        const picks = shuffle(DIGITS, rand);
-        for (const n of picks) {
-          if (!canPlace(grid, idx, n)) continue;
-          grid[idx] = n;
-          if (fillSudoku(rand, grid, idx + 1)) return true;
-          grid[idx] = 0;
-        }
-        return false;
-      }
-
-      function generate(seed, holes) {
-        const rand = mulberry32(seed);
-        const solved = new Array(81).fill(0);
-        fillSudoku(rand, solved, 0);
-
-        const puzzleGrid = solved.slice();
-        const indexes = shuffle([...Array(81).keys()], rand);
-        for (let i = 0; i < holes; i += 1) {
-          puzzleGrid[indexes[i]] = 0;
-        }
-
-        return { solved, puzzle: puzzleGrid };
-      }
-
-      function getPeers(index) {
-        const r = Math.floor(index / SIZE);
-        const c = index % SIZE;
-        const peers = new Set();
-
-        for (let i = 0; i < SIZE; i += 1) {
-          peers.add(r * SIZE + i);
-          peers.add(i * SIZE + c);
-        }
-
-        const br = Math.floor(r / BOX) * BOX;
-        const bc = Math.floor(c / BOX) * BOX;
-        for (let rr = br; rr < br + BOX; rr += 1) {
-          for (let cc = bc; cc < bc + BOX; cc += 1) {
-            peers.add(rr * SIZE + cc);
+          return out;
+        },
+        row(idx) { return Math.floor(idx / Constants.SIZE); },
+        col(idx) { return idx % Constants.SIZE; },
+        boxStartRow(r) { return Math.floor(r / Constants.BOX) * Constants.BOX; },
+        boxStartCol(c) { return Math.floor(c / Constants.BOX) * Constants.BOX; },
+        canPlace(grid, idx, n) {
+          const r = this.row(idx);
+          const c = this.col(idx);
+          for (let i = 0; i < 9; i += 1) {
+            if (grid[r * 9 + i] === n) return false;
+            if (grid[i * 9 + c] === n) return false;
           }
-        }
-
-        peers.delete(index);
-        return peers;
-      }
-
-      function conflictIndexes() {
-        const bad = new Set();
-
-        for (let i = 0; i < 81; i += 1) {
-          if (state[i] === 0) continue;
-          const v = state[i];
-          for (const p of getPeers(i)) {
-            if (state[p] === v) {
-              bad.add(i);
-              bad.add(p);
+          const br = this.boxStartRow(r);
+          const bc = this.boxStartCol(c);
+          for (let rr = br; rr < br + 3; rr += 1) {
+            for (let cc = bc; cc < bc + 3; cc += 1) {
+              if (grid[rr * 9 + cc] === n) return false;
             }
           }
-        }
+          return true;
+        },
+        fill(rand, grid = new Array(81).fill(0), idx = 0) {
+          while (idx < 81 && grid[idx] !== 0) idx += 1;
+          if (idx === 81) return true;
+          for (const n of this.shuffle(Constants.DIGITS, rand)) {
+            if (!this.canPlace(grid, idx, n)) continue;
+            grid[idx] = n;
+            if (this.fill(rand, grid, idx + 1)) return true;
+            grid[idx] = 0;
+          }
+          return false;
+        },
+        candidateMask(grid, idx) {
+          if (grid[idx] !== 0) return 0;
+          let mask = 0;
+          for (let n = 1; n <= 9; n += 1) {
+            if (this.canPlace(grid, idx, n)) mask |= 1 << (n - 1);
+          }
+          return mask;
+        },
+        bitCount(mask) {
+          let x = mask;
+          let c = 0;
+          while (x) {
+            x &= x - 1;
+            c += 1;
+          }
+          return c;
+        },
+        firstBitDigit(mask) {
+          for (let n = 1; n <= 9; n += 1) {
+            if (mask & (1 << (n - 1))) return n;
+          }
+          return 0;
+        },
+        findBestCell(grid) {
+          let bestIdx = -1;
+          let bestMask = 0;
+          let minCount = 10;
+          for (let i = 0; i < 81; i += 1) {
+            if (grid[i] !== 0) continue;
+            const mask = this.candidateMask(grid, i);
+            const cnt = this.bitCount(mask);
+            if (cnt === 0) return { idx: i, mask: 0, count: 0 };
+            if (cnt < minCount) {
+              minCount = cnt;
+              bestIdx = i;
+              bestMask = mask;
+              if (cnt === 1) break;
+            }
+          }
+          return { idx: bestIdx, mask: bestMask, count: minCount };
+        },
+        countSolutions(grid, limit = 2) {
+          let count = 0;
+          const arr = grid.slice();
+          const dfs = () => {
+            if (count >= limit) return;
+            const best = this.findBestCell(arr);
+            if (best.idx === -1) {
+              count += 1;
+              return;
+            }
+            if (best.count === 0) return;
 
-        return bad;
-      }
+            for (let n = 1; n <= 9; n += 1) {
+              const bit = 1 << (n - 1);
+              if (!(best.mask & bit)) continue;
+              arr[best.idx] = n;
+              dfs();
+              arr[best.idx] = 0;
+              if (count >= limit) return;
+            }
+          };
+          dfs();
+          return count;
+        },
+        peers(index) {
+          const r = this.row(index);
+          const c = this.col(index);
+          const set = new Set();
+          for (let i = 0; i < 9; i += 1) {
+            set.add(r * 9 + i);
+            set.add(i * 9 + c);
+          }
+          const br = this.boxStartRow(r);
+          const bc = this.boxStartCol(c);
+          for (let rr = br; rr < br + 3; rr += 1) {
+            for (let cc = bc; cc < bc + 3; cc += 1) set.add(rr * 9 + cc);
+          }
+          set.delete(index);
+          return [...set];
+        },
+      };
 
-      function checkWin() {
-        if (state.includes(0)) return false;
-        for (let i = 0; i < 81; i += 1) {
-          if (state[i] !== solution[i]) return false;
-        }
-        return true;
-      }
+      const Solver = {
+        allUnits() {
+          const units = [];
+          for (let r = 0; r < 9; r += 1) units.push([...Array(9)].map((_, c) => r * 9 + c));
+          for (let c = 0; c < 9; c += 1) units.push([...Array(9)].map((_, r) => r * 9 + c));
+          for (let br = 0; br < 3; br += 1) {
+            for (let bc = 0; bc < 3; bc += 1) {
+              const u = [];
+              for (let r = br * 3; r < br * 3 + 3; r += 1) {
+                for (let c = bc * 3; c < bc * 3 + 3; c += 1) u.push(r * 9 + c);
+              }
+              units.push(u);
+            }
+          }
+          return units;
+        },
+        solveAndRate(puzzle) {
+          const grid = puzzle.slice();
+          const notes = new Array(81).fill(0);
+          const stats = { naked: 0, hidden: 0, locked: 0 };
+          const units = this.allUnits();
 
-      function setToast(msg, isGood = false) {
-        toastEl.textContent = msg;
-        toastEl.style.color = isGood ? "#198754" : "#b23a48";
-      }
+          const computeAllNotes = () => {
+            for (let i = 0; i < 81; i += 1) {
+              notes[i] = grid[i] === 0 ? Generator.candidateMask(grid, i) : 0;
+            }
+          };
 
-      function makeEmptyNotes() {
-        return new Array(81).fill(0);
-      }
+          const setCell = (idx, n, kind) => {
+            grid[idx] = n;
+            notes[idx] = 0;
+            if (kind && stats[kind] !== undefined) stats[kind] += 1;
+          };
 
-      function noteDigits(mask) {
-        let out = "";
-        for (let n = 1; n <= 9; n += 1) {
-          const bit = 1 << (n - 1);
-          if (mask & bit) out += String(n);
-        }
-        return out;
-      }
+          const applyNakedSingle = () => {
+            for (let i = 0; i < 81; i += 1) {
+              if (grid[i] !== 0) continue;
+              const m = notes[i];
+              if (m && Generator.bitCount(m) === 1) {
+                setCell(i, Generator.firstBitDigit(m), "naked");
+                return true;
+              }
+            }
+            return false;
+          };
 
-      function toggleNote(index, n) {
-        const bit = 1 << (n - 1);
-        notes[index] = notes[index] ^ bit;
-      }
+          const applyHiddenSingle = () => {
+            for (const unit of units) {
+              for (let n = 1; n <= 9; n += 1) {
+                const bit = 1 << (n - 1);
+                let pos = -1;
+                let cnt = 0;
+                for (const idx of unit) {
+                  if (grid[idx] === 0 && (notes[idx] & bit)) {
+                    cnt += 1;
+                    pos = idx;
+                    if (cnt > 1) break;
+                  }
+                }
+                if (cnt === 1) {
+                  setCell(pos, n, "hidden");
+                  return true;
+                }
+              }
+            }
+            return false;
+          };
 
-      function snapshot() {
-        return {
-          state: state.slice(),
-          notes: notes.slice(),
-          penaltyPoints,
-          elapsedSeconds,
-          completed,
-          failed,
-          selected,
-        };
-      }
+          const applyLockedCandidates = () => {
+            for (let br = 0; br < 3; br += 1) {
+              for (let bc = 0; bc < 3; bc += 1) {
+                const box = [];
+                for (let r = br * 3; r < br * 3 + 3; r += 1) {
+                  for (let c = bc * 3; c < bc * 3 + 3; c += 1) box.push(r * 9 + c);
+                }
+                for (let n = 1; n <= 9; n += 1) {
+                  const bit = 1 << (n - 1);
+                  const holders = box.filter((idx) => grid[idx] === 0 && (notes[idx] & bit));
+                  if (holders.length <= 1) continue;
+                  const rows = new Set(holders.map((idx) => Math.floor(idx / 9)));
+                  const cols = new Set(holders.map((idx) => idx % 9));
 
-      function saveHistory() {
-        undoStack.push(snapshot());
-        if (undoStack.length > 200) undoStack.shift();
-        redoStack = [];
-      }
+                  if (rows.size === 1) {
+                    const row = [...rows][0];
+                    let changed = false;
+                    for (let c = 0; c < 9; c += 1) {
+                      const idx = row * 9 + c;
+                      if (box.includes(idx) || grid[idx] !== 0) continue;
+                      if (notes[idx] & bit) {
+                        notes[idx] &= ~bit;
+                        changed = true;
+                      }
+                    }
+                    if (changed) {
+                      stats.locked += 1;
+                      return true;
+                    }
+                  }
 
-      function restoreSnapshot(snap) {
-        state = snap.state.slice();
-        notes = snap.notes.slice();
-        penaltyPoints = snap.penaltyPoints;
-        elapsedSeconds = snap.elapsedSeconds;
-        completed = snap.completed;
-        failed = snap.failed;
-        selected = snap.selected;
-        recomputeScore();
+                  if (cols.size === 1) {
+                    const col = [...cols][0];
+                    let changed = false;
+                    for (let r = 0; r < 9; r += 1) {
+                      const idx = r * 9 + col;
+                      if (box.includes(idx) || grid[idx] !== 0) continue;
+                      if (notes[idx] & bit) {
+                        notes[idx] &= ~bit;
+                        changed = true;
+                      }
+                    }
+                    if (changed) {
+                      stats.locked += 1;
+                      return true;
+                    }
+                  }
+                }
+              }
+            }
+            return false;
+          };
 
-        if (!completed && !failed) startTimer(elapsedSeconds);
-        else stopTimer();
+          computeAllNotes();
+          let guard = 0;
+          while (guard < 1000) {
+            guard += 1;
+            if (!grid.includes(0)) break;
+            if (applyNakedSingle()) {
+              computeAllNotes();
+              continue;
+            }
+            if (applyHiddenSingle()) {
+              computeAllNotes();
+              continue;
+            }
+            if (applyLockedCandidates()) {
+              continue;
+            }
+            break;
+          }
 
-        render();
-      }
+          const solved = !grid.includes(0);
+          const difficultyScore = stats.naked * 1 + stats.hidden * 2 + stats.locked * 7;
+          return { solved, difficultyScore, stats };
+        },
+        classify(result) {
+          const { difficultyScore, stats } = result;
+          if (stats.locked === 0 && difficultyScore <= 30) return "easy";
+          if (difficultyScore <= 80 && stats.locked <= 4) return "medium";
+          return "hard";
+        },
+      };
 
-      function undo() {
-        if (undoStack.length === 0) {
-          setToast("没有可撤销的操作。", false);
-          return;
-        }
-        redoStack.push(snapshot());
-        const snap = undoStack.pop();
-        restoreSnapshot(snap);
-        playSfx("undo");
-        setToast("已撤销一步。", true);
-      }
+      const Scoring = {
+        recompute() {
+          GameState.score = Math.max(0, Constants.START_SCORE - GameState.penaltyPoints);
+          els.score.textContent = `得分：${GameState.score}`;
+          els.danger.textContent = `失败阈值：${Constants.FAIL_THRESHOLD}`;
+        },
+      };
 
-      function redo() {
-        if (redoStack.length === 0) {
-          setToast("没有可重做的操作（先撤销一步）。", false);
-          return;
-        }
-        undoStack.push(snapshot());
-        const snap = redoStack.pop();
-        restoreSnapshot(snap);
-        playSfx("redo");
-        setToast("已重做一步。", true);
+      const UI = {
+        applySettings() {
+          els.body.classList.toggle("high-contrast", Settings.highContrast);
+          els.body.classList.toggle("large-font", Settings.largeFont);
+          els.muteBtn.classList.toggle("active", Settings.mute);
+          els.muteBtn.setAttribute("aria-pressed", String(Settings.mute));
+          els.contrastBtn.classList.toggle("active", Settings.highContrast);
+          els.contrastBtn.setAttribute("aria-pressed", String(Settings.highContrast));
+          els.fontBtn.classList.toggle("active", Settings.largeFont);
+          els.fontBtn.setAttribute("aria-pressed", String(Settings.largeFont));
+          els.volumeSlider.value = String(Settings.volume);
+          els.volumeText.textContent = `${Math.round(Settings.volume * 100)}%`;
+
+          const btns = [...els.effectRow.querySelectorAll("button")];
+          for (const btn of btns) {
+            btn.classList.toggle("active", btn.dataset.effect === Settings.effectIntensity);
+          }
+        },
+        updateTimer() {
+          els.timer.textContent = `计时：${fmtSec(GameState.elapsedSeconds)}`;
+        },
+        updateBadges() {
+          const modeText = GameState.mode === "daily" ? "每日挑战" : "普通";
+          els.modeBadge.textContent = `模式：${modeText}`;
+          els.dayBadge.textContent = `日期：${GameState.day || "--"}`;
+          els.meta.textContent = `难度：${DIFFICULTIES[GameState.difficulty].label} ｜ Seed: ${GameState.gameSeed}`;
+          els.modeNormal.classList.toggle("active", GameState.mode === "normal");
+          els.modeDaily.classList.toggle("active", GameState.mode === "daily");
+        },
+        updateProgress() {
+          const filled = GameState.state.filter((v) => v !== 0).length;
+          els.filled.textContent = `已填：${filled}/81`;
+        },
+        renderDifficultyButtons() {
+          for (const btn of els.difficultyRow.querySelectorAll("button")) {
+            btn.classList.toggle("active", btn.dataset.diff === GameState.difficulty);
+          }
+        },
+        renderActionButtons() {
+          els.noteMode.classList.toggle("active", GameState.noteMode);
+          els.noteMode.setAttribute("aria-pressed", String(GameState.noteMode));
+          els.undo.disabled = GameState.undoStack.length === 0;
+          els.redo.disabled = GameState.redoStack.length === 0;
+          els.undo.title = "撤销上一步";
+          els.redo.title = "重做被撤销的一步";
+          els.toggleSettings.classList.toggle("active", GameState.settingsOpen);
+          els.toggleSettings.setAttribute("aria-expanded", String(GameState.settingsOpen));
+          els.settingsPanel.classList.toggle("open", GameState.settingsOpen);
+        },
+        noteDigits(mask) {
+          let out = "";
+          for (let n = 1; n <= 9; n += 1) {
+            if (mask & (1 << (n - 1))) out += String(n);
+          }
+          return out;
+        },
+        setCellAria(cell, i) {
+          const r = Math.floor(i / 9) + 1;
+          const c = (i % 9) + 1;
+          const fixed = GameState.fixed[i] ? "固定" : "可编辑";
+          const value = GameState.state[i] || (GameState.notes[i] ? `候选 ${this.noteDigits(GameState.notes[i])}` : "空");
+          cell.setAttribute("aria-label", `第 ${r} 行第 ${c} 列，${fixed}，当前 ${value}`);
+        },
+        renderBoard() {
+          const bad = new Set();
+          for (let i = 0; i < 81; i += 1) {
+            if (GameState.state[i] === 0) continue;
+            const v = GameState.state[i];
+            for (const p of Generator.peers(i)) {
+              if (GameState.state[p] === v) {
+                bad.add(i);
+                bad.add(p);
+              }
+            }
+          }
+
+          const peerSet = GameState.selected >= 0 ? new Set(Generator.peers(GameState.selected)) : new Set();
+
+          GameState.cells.forEach((cell, i) => {
+            cell.className = "cell";
+            if (GameState.fixed[i]) cell.classList.add("fixed");
+            else if (GameState.state[i] !== 0) cell.classList.add("input");
+
+            if (GameState.selected === i) cell.classList.add("selected");
+            else if (peerSet.has(i)) cell.classList.add("peer");
+            if (bad.has(i)) cell.classList.add("conflict");
+            if (!bad.has(i) && GameState.state[i] !== 0 && GameState.state[i] === GameState.solution[i]) {
+              cell.classList.add("good");
+            }
+
+            if (GameState.state[i] !== 0) {
+              cell.textContent = String(GameState.state[i]);
+            } else if (GameState.notes[i] !== 0) {
+              cell.classList.add("note");
+              cell.textContent = this.noteDigits(GameState.notes[i]);
+            } else {
+              cell.textContent = "";
+            }
+
+            this.setCellAria(cell, i);
+          });
+
+          this.renderActionButtons();
+          this.updateProgress();
+          Scoring.recompute();
+          URLSync.schedule();
+
+          if (GameState.failed) {
+            setStatus("分数跌破阈值，本局失败。");
+          } else if (GameState.selected < 0) {
+            setStatus(GameState.noteMode ? "笔记模式已开启，点击空格后输入数字。" : "点击一个空格开始。");
+          } else if (GameState.fixed[GameState.selected]) {
+            setStatus("这是预设数字，不能修改。");
+          } else {
+            const rr = Math.floor(GameState.selected / 9) + 1;
+            const cc = (GameState.selected % 9) + 1;
+            setStatus(`第 ${rr} 行，第 ${cc} 列${GameState.noteMode ? "（笔记模式）" : ""}`);
+          }
+
+          if (!GameState.completed && !GameState.failed && checkWin()) {
+            Game.complete();
+          }
+        },
+        renderLeaderboard() {
+          els.leaderboard.innerHTML = "";
+          if (GameState.mode === "daily") {
+            const dayKey = `${GameState.day}:${GameState.difficulty}`;
+            const map = Storage.readDailyScores();
+            const list = Array.isArray(map[dayKey]) ? map[dayKey] : [];
+            els.leaderboardTitle.textContent = `今日排行榜（${GameState.day}，前 5）`;
+            if (list.length === 0) {
+              const li = document.createElement("li");
+              li.textContent = "今天还没有成绩。";
+              els.leaderboard.appendChild(li);
+              els.best.textContent = "最佳：--:--";
+              return;
+            }
+            list.forEach((e, i) => {
+              const li = document.createElement("li");
+              li.textContent = `#${i + 1} ${fmtSec(e.time)} ｜ ${e.score}分`;
+              els.leaderboard.appendChild(li);
+            });
+            els.best.textContent = `最佳：${fmtSec(list[0].time)} ｜ ${list[0].score}分`;
+            return;
+          }
+
+          const scores = Storage.readScores();
+          const list = scores[GameState.difficulty] || [];
+          els.leaderboardTitle.textContent = "本地排行榜（前 5）";
+          if (list.length === 0) {
+            const li = document.createElement("li");
+            li.textContent = "还没有成绩，快冲一把。";
+            els.leaderboard.appendChild(li);
+            els.best.textContent = "最佳：--:--";
+            return;
+          }
+          list.forEach((e, i) => {
+            const li = document.createElement("li");
+            li.textContent = `#${i + 1} ${fmtSec(e.time)} ｜ ${e.score}分`;
+            els.leaderboard.appendChild(li);
+          });
+          els.best.textContent = `最佳：${fmtSec(list[0].time)} ｜ ${list[0].score}分`;
+        },
+        openResultModal(title, lines) {
+          els.resultTitle.textContent = title;
+          els.resultBody.innerHTML = lines.map((x) => `<p>${x}</p>`).join("");
+          els.resultModal.classList.add("open");
+        },
+        closeResultModal() {
+          els.resultModal.classList.remove("open");
+        },
+      };
+
+      const URLSync = {
+        encodeState(arr) { return arr.map((n) => String(n)).join(""); },
+        decodeState(text) {
+          if (!text || text.length !== 81 || !/^[0-9]+$/.test(text)) return null;
+          return text.split("").map((c) => Number(c));
+        },
+        encodeNotes(arr) {
+          return arr.map((n) => n.toString(36).padStart(2, "0")).join("");
+        },
+        decodeNotes(text) {
+          if (!text || text.length !== 162 || !/^[0-9a-z]+$/.test(text)) return null;
+          const out = [];
+          for (let i = 0; i < 162; i += 2) {
+            const val = Number.parseInt(text.slice(i, i + 2), 36);
+            if (!Number.isFinite(val) || val < 0 || val > 511) return null;
+            out.push(val);
+          }
+          return out;
+        },
+        makeURL() {
+          const url = new URL(window.location.href);
+          url.searchParams.set("v", Constants.URL_VERSION);
+          url.searchParams.set("seed", String(GameState.gameSeed));
+          url.searchParams.set("diff", GameState.difficulty);
+          url.searchParams.set("mode", GameState.mode);
+          url.searchParams.set("day", GameState.day);
+          url.searchParams.set("state", this.encodeState(GameState.state));
+          url.searchParams.set("notes", this.encodeNotes(GameState.notes));
+          url.searchParams.set("t", String(GameState.elapsedSeconds));
+          url.searchParams.set("p", String(GameState.penaltyPoints));
+          return url;
+        },
+        flush(force = false) {
+          if (GameState.urlSyncTimer) {
+            clearTimeout(GameState.urlSyncTimer);
+            GameState.urlSyncTimer = null;
+          }
+          const url = this.makeURL();
+          const hash = url.search;
+          if (!force && hash === GameState.lastUrlHash) return;
+          history.replaceState({}, "", url);
+          GameState.lastUrlHash = hash;
+        },
+        schedule() {
+          if (GameState.urlSyncTimer) return;
+          GameState.urlSyncTimer = setTimeout(() => {
+            GameState.urlSyncTimer = null;
+            this.flush(false);
+          }, 300);
+        },
+      };
+
+      function resizeFireworks() {
+        els.fireworks.width = window.innerWidth;
+        els.fireworks.height = window.innerHeight;
       }
 
       function vibrateWarn() {
         if (navigator.vibrate) navigator.vibrate([120, 50, 120]);
-        boardEl.classList.remove("shake");
-        void boardEl.offsetWidth;
-        boardEl.classList.add("shake");
+        els.board.classList.remove("shake");
+        void els.board.offsetWidth;
+        els.board.classList.add("shake");
       }
 
-      function applyPenalty(points, message, sfx = "wrong") {
-        penaltyPoints += points;
-        recomputeScore();
-        vibrateWarn();
-        playSfx(sfx);
-        setToast(`${message}（-${points}分）`, false);
-
-        if (!failed && score <= FAIL_THRESHOLD) {
-          failed = true;
-          stopTimer();
-          playSfx("fail");
-          statusEl.textContent = "分数跌破阈值，本局失败。点“新布局”再来。";
-          setToast("游戏失败：扣分过多。", false);
-        }
-      }
-
-      function maybeWin() {
-        if (!completed && !failed && checkWin()) {
-          completed = true;
-          tickTimer();
-          stopTimer();
-          pushScore(difficulty, elapsedSeconds, score);
-          renderLeaderboard();
-          playSfx("win");
-          setToast(`你通关啦！用时 ${formatSeconds(elapsedSeconds)}，得分 ${score}。`, true);
-          statusEl.textContent = "完美解出这盘数独。";
-          launchFireworks();
-        }
-      }
-
-      function readScores() {
-        try {
-          const data = localStorage.getItem(SCORE_KEY);
-          if (!data) return { easy: [], medium: [], hard: [] };
-          const parsed = JSON.parse(data);
-          const out = { easy: [], medium: [], hard: [] };
-          ["easy", "medium", "hard"].forEach((k) => {
-            const raw = Array.isArray(parsed[k]) ? parsed[k] : [];
-            out[k] = raw
-              .map((entry) => {
-                if (typeof entry === "number") return { time: entry, score: START_SCORE };
-                if (entry && Number.isFinite(entry.time) && Number.isFinite(entry.score)) {
-                  return { time: Math.floor(entry.time), score: Math.floor(entry.score) };
-                }
-                return null;
-              })
-              .filter(Boolean)
-              .slice(0, 5);
-          });
-          return out;
-        } catch {
-          return { easy: [], medium: [], hard: [] };
-        }
-      }
-
-      function writeScores(scores) {
-        localStorage.setItem(SCORE_KEY, JSON.stringify(scores));
-      }
-
-      function pushScore(diff, sec, finalScore) {
-        const scores = readScores();
-        const list = scores[diff] || [];
-        list.push({ time: sec, score: finalScore });
-        list.sort((a, b) => {
-          if (a.time !== b.time) return a.time - b.time;
-          return b.score - a.score;
-        });
-        scores[diff] = list.slice(0, 5);
-        writeScores(scores);
-      }
-
-      function renderLeaderboard() {
-        const scores = readScores();
-        const list = scores[difficulty] || [];
-        leaderboardEl.innerHTML = "";
-        if (list.length === 0) {
-          const li = document.createElement("li");
-          li.textContent = "还没有成绩，快冲一把。";
-          leaderboardEl.appendChild(li);
-          bestEl.textContent = "最佳：--:--";
-          return;
-        }
-
-        list.forEach((entry, i) => {
-          const li = document.createElement("li");
-          li.textContent = `#${i + 1} ${formatSeconds(entry.time)} ｜ ${entry.score}分`;
-          leaderboardEl.appendChild(li);
-        });
-        bestEl.textContent = `最佳：${formatSeconds(list[0].time)} ｜ ${list[0].score}分`;
-      }
-
-      function updateProgressLabel() {
-        const filled = state.filter((v) => v !== 0).length;
-        filledEl.textContent = `已填：${filled}/81`;
-      }
-
-      function renderDifficultyButtons() {
-        Array.from(difficultyRowEl.querySelectorAll("button")).forEach((btn) => {
-          btn.classList.toggle("active", btn.dataset.diff === difficulty);
-        });
-      }
-
-      function renderActionButtons() {
-        noteModeBtn.classList.toggle("active", noteMode);
-        undoBtn.disabled = undoStack.length === 0;
-        redoBtn.disabled = redoStack.length === 0;
-        undoBtn.title = "撤销上一步";
-        redoBtn.title = "重做被撤销的一步";
-      }
-
-      function render() {
-        const bad = conflictIndexes();
-        const peers = selected >= 0 ? getPeers(selected) : new Set();
-
-        cells.forEach((cell, i) => {
-          cell.className = "cell";
-          if (fixed[i]) cell.classList.add("fixed");
-          else if (state[i] !== 0) cell.classList.add("input");
-
-          if (selected === i) cell.classList.add("selected");
-          else if (peers.has(i)) cell.classList.add("peer");
-
-          if (bad.has(i)) cell.classList.add("conflict");
-
-          if (!bad.has(i) && state[i] !== 0 && state[i] === solution[i]) {
-            cell.classList.add("good");
-          }
-
-          if (state[i] !== 0) {
-            cell.textContent = state[i];
-          } else if (notes[i] !== 0) {
-            cell.classList.add("note");
-            cell.textContent = noteDigits(notes[i]);
-          } else {
-            cell.textContent = "";
-          }
-        });
-
-        recomputeScore();
-        renderActionButtons();
-        updateProgressLabel();
-        updateUrl(gameSeed, difficulty, state, elapsedSeconds, notes, penaltyPoints);
-
-        if (failed) {
-          statusEl.textContent = "分数跌破阈值，本局失败。";
-        } else if (selected < 0) {
-          statusEl.textContent = noteMode ? "笔记模式已开启，点击空格后输入数字。" : "点击一个空格开始。";
-        } else if (fixed[selected]) {
-          statusEl.textContent = "这是预设数字，不能修改。";
-        } else {
-          const mode = noteMode ? "（笔记模式）" : "";
-          statusEl.textContent = `第 ${Math.floor(selected / 9) + 1} 行，第 ${(selected % 9) + 1} 列${mode}`;
-        }
-
-        maybeWin();
-      }
-
-      function writeNumber(n) {
-        if (selected < 0 || fixed[selected] || completed || failed) return;
-        saveHistory();
-
-        if (noteMode && state[selected] === 0) {
-          toggleNote(selected, n);
-          playSfx("note");
-          setToast("候选数已更新。", true);
-          render();
-          return;
-        }
-
-        if (solution[selected] !== n) {
-          applyPenalty(WRONG_PENALTY, "填写错误，已扣分", "wrong");
-          render();
-          return;
-        }
-
-        state[selected] = n;
-        notes[selected] = 0;
-        playSfx("fill-ok");
-        setToast("填写正确。", true);
-        render();
-      }
-
-      function erase() {
-        if (selected < 0 || fixed[selected] || completed || failed) return;
-        saveHistory();
-        state[selected] = 0;
-        notes[selected] = 0;
-        playSfx("erase");
-        setToast("已擦除该格。", true);
-        render();
-      }
-
-      function giveHint() {
-        if (completed || failed) return;
-        const editable = [...Array(81).keys()].filter((i) => !fixed[i] && state[i] !== solution[i]);
-        if (editable.length === 0) {
-          setToast("没有可提示的格子。", true);
-          return;
-        }
-
-        saveHistory();
-        const idx = editable[Math.floor(Math.random() * editable.length)];
-        state[idx] = solution[idx];
-        notes[idx] = 0;
-        selected = idx;
-        applyPenalty(HINT_PENALTY, "使用提示，已扣分", "hint");
-        render();
-      }
-
-      function createBoard() {
-        boardEl.innerHTML = "";
-        cells = [];
-        for (let i = 0; i < 81; i += 1) {
-          const cell = document.createElement("button");
-          cell.type = "button";
-          cell.className = "cell";
-          cell.dataset.row = String(Math.floor(i / 9));
-          cell.dataset.col = String(i % 9);
-          cell.addEventListener("click", () => {
-            selected = i;
-            render();
-          });
-          boardEl.appendChild(cell);
-          cells.push(cell);
-        }
-      }
-
-      function createNumPad() {
-        numPadEl.innerHTML = "";
-        for (const n of DIGITS) {
-          const btn = document.createElement("button");
-          btn.type = "button";
-          btn.className = "num-btn";
-          btn.textContent = String(n);
-          btn.addEventListener("click", () => writeNumber(n));
-          numPadEl.appendChild(btn);
-        }
-      }
-
-      function createDifficultyButtons() {
-        difficultyRowEl.innerHTML = "";
-        Object.keys(DIFFICULTIES).forEach((k) => {
-          const btn = document.createElement("button");
-          btn.type = "button";
-          btn.dataset.diff = k;
-          btn.textContent = DIFFICULTIES[k].label;
-          btn.addEventListener("click", () => {
-            difficulty = k;
-            renderDifficultyButtons();
-            renderLeaderboard();
-            loadGame((Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0);
-          });
-          difficultyRowEl.appendChild(btn);
-        });
-      }
-
-      function encodeState(arr) {
-        return arr.map((n) => String(n)).join("");
-      }
-
-      function decodeState(text) {
-        if (!text || text.length !== 81 || !/^[0-9]+$/.test(text)) return null;
-        return text.split("").map((c) => Number(c));
-      }
-
-      function encodeNotes(arr) {
-        return arr.map((n) => n.toString(36).padStart(2, "0")).join("");
-      }
-
-      function decodeNotes(text) {
-        if (!text || text.length !== 162 || !/^[0-9a-z]+$/.test(text)) return null;
-        const out = [];
-        for (let i = 0; i < 162; i += 2) {
-          const val = Number.parseInt(text.slice(i, i + 2), 36);
-          if (!Number.isFinite(val) || val < 0 || val > 511) return null;
-          out.push(val);
-        }
-        return out;
-      }
-
-      function updateUrl(seed, diff, progress, elapsed, noteArr, penalty) {
-        const url = new URL(window.location.href);
-        url.searchParams.set("seed", String(seed));
-        url.searchParams.set("diff", diff);
-        if (progress) url.searchParams.set("state", encodeState(progress));
-        else url.searchParams.delete("state");
-
-        if (noteArr) url.searchParams.set("notes", encodeNotes(noteArr));
-        else url.searchParams.delete("notes");
-
-        if (typeof elapsed === "number") url.searchParams.set("t", String(elapsed));
-        else url.searchParams.delete("t");
-
-        if (typeof penalty === "number") url.searchParams.set("p", String(penalty));
-        else url.searchParams.delete("p");
-
-        history.replaceState({}, "", url);
-      }
-
-      function loadGame(seed, options = {}) {
-        gameSeed = seed >>> 0;
-        const holes = DIFFICULTIES[difficulty].holes;
-        const { solved, puzzle: p } = generate(gameSeed, holes);
-        solution = solved;
-        puzzle = p;
-        state = p.slice();
-        fixed = p.map((v) => v !== 0);
-        notes = makeEmptyNotes();
-        selected = -1;
-        completed = false;
-        failed = false;
-        noteMode = false;
-        undoStack = [];
-        redoStack = [];
-        document.body.classList.remove("victory-flash");
-        victoryBannerEl.classList.remove("show");
-
-        if (Array.isArray(options.progress) && options.progress.length === 81) {
-          for (let i = 0; i < 81; i += 1) {
-            if (!fixed[i] && options.progress[i] >= 0 && options.progress[i] <= 9) {
-              state[i] = options.progress[i];
-            }
-          }
-        }
-
-        if (Array.isArray(options.notes) && options.notes.length === 81) {
-          for (let i = 0; i < 81; i += 1) {
-            if (!fixed[i] && state[i] === 0) notes[i] = options.notes[i] & 511;
-          }
-        }
-
-        penaltyPoints = Number.isFinite(options.penaltyPoints) && options.penaltyPoints >= 0 ? Math.floor(options.penaltyPoints) : 0;
-        recomputeScore();
-
-        const initialSeconds = Number.isFinite(options.elapsed) && options.elapsed >= 0 ? Math.floor(options.elapsed) : 0;
-        if (score <= FAIL_THRESHOLD) {
-          failed = true;
-          elapsedSeconds = initialSeconds;
-          updateTimer();
-          stopTimer();
-        } else {
-          startTimer(initialSeconds);
-        }
-
-        updateUrl(gameSeed, difficulty, state, elapsedSeconds, notes, penaltyPoints);
-        metaEl.textContent = `难度：${DIFFICULTIES[difficulty].label} ｜ Seed: ${gameSeed}`;
-        setToast(options.restore ? "已恢复你分享的进度。" : "布局已生成，祝你玩得开心！", true);
-        renderDifficultyButtons();
-        renderLeaderboard();
-        render();
+      function effectConfig() {
+        if (Settings.effectIntensity === "low") return { bursts: 4, confetti: 80, frames: 100 };
+        if (Settings.effectIntensity === "high") return { bursts: 12, confetti: 260, frames: 220 };
+        return { bursts: 8, confetti: 160, frames: 160 };
       }
 
       function launchFireworks() {
+        const cfg = effectConfig();
         const colors = ["#ff595e", "#ffca3a", "#8ac926", "#1982c4", "#6a4c93", "#ff924c"];
         const particles = [];
         const confetti = [];
-        const bursts = 8;
 
-        document.body.classList.add("victory-flash");
-        victoryBannerEl.classList.remove("show");
-        void victoryBannerEl.offsetWidth;
-        victoryBannerEl.classList.add("show");
+        els.body.classList.add("victory-flash");
+        els.victoryBanner.classList.remove("show");
+        void els.victoryBanner.offsetWidth;
+        els.victoryBanner.classList.add("show");
         setTimeout(() => {
-          document.body.classList.remove("victory-flash");
-          victoryBannerEl.classList.remove("show");
+          els.body.classList.remove("victory-flash");
+          els.victoryBanner.classList.remove("show");
         }, 1800);
 
-        for (let b = 0; b < bursts; b += 1) {
-          const cx = Math.random() * fireworksCanvas.width;
-          const cy = Math.random() * (fireworksCanvas.height * 0.55);
+        for (let b = 0; b < cfg.bursts; b += 1) {
+          const cx = Math.random() * els.fireworks.width;
+          const cy = Math.random() * (els.fireworks.height * 0.55);
           const count = 38;
           for (let i = 0; i < count; i += 1) {
             const angle = (Math.PI * 2 * i) / count;
             const speed = 1 + Math.random() * 4;
-            particles.push({
-              x: cx,
-              y: cy,
-              vx: Math.cos(angle) * speed,
-              vy: Math.sin(angle) * speed,
-              life: 60 + Math.floor(Math.random() * 24),
-              color: colors[Math.floor(Math.random() * colors.length)],
-            });
+            particles.push({ x: cx, y: cy, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, life: 70 + Math.floor(Math.random() * 30), color: colors[Math.floor(Math.random() * colors.length)] });
           }
         }
 
-        for (let i = 0; i < 180; i += 1) {
+        for (let i = 0; i < cfg.confetti; i += 1) {
           confetti.push({
-            x: Math.random() * fireworksCanvas.width,
-            y: -Math.random() * fireworksCanvas.height * 0.35,
+            x: Math.random() * els.fireworks.width,
+            y: -Math.random() * els.fireworks.height * 0.35,
             vx: -1 + Math.random() * 2,
             vy: 1.4 + Math.random() * 2.4,
             w: 4 + Math.random() * 4,
@@ -1154,151 +1396,770 @@
         let frame = 0;
         function step() {
           frame += 1;
-          fireworksCtx.clearRect(0, 0, fireworksCanvas.width, fireworksCanvas.height);
+          Effects.ctx.clearRect(0, 0, els.fireworks.width, els.fireworks.height);
 
-          particles.forEach((p) => {
-            if (p.life <= 0) return;
+          for (const p of particles) {
+            if (p.life <= 0) continue;
             p.life -= 1;
             p.x += p.vx;
             p.y += p.vy;
             p.vy += 0.04;
-            fireworksCtx.globalAlpha = Math.max(0, p.life / 84);
-            fireworksCtx.fillStyle = p.color;
-            fireworksCtx.beginPath();
-            fireworksCtx.arc(p.x, p.y, 2, 0, Math.PI * 2);
-            fireworksCtx.fill();
-          });
+            Effects.ctx.globalAlpha = Math.max(0, p.life / 100);
+            Effects.ctx.fillStyle = p.color;
+            Effects.ctx.beginPath();
+            Effects.ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+            Effects.ctx.fill();
+          }
 
-          confetti.forEach((c) => {
+          for (const c of confetti) {
             c.x += c.vx;
             c.y += c.vy;
             c.rot += c.vr;
-            fireworksCtx.save();
-            fireworksCtx.translate(c.x, c.y);
-            fireworksCtx.rotate(c.rot);
-            fireworksCtx.fillStyle = c.color;
-            fireworksCtx.globalAlpha = frame < 110 ? 0.85 : Math.max(0, (170 - frame) / 60);
-            fireworksCtx.fillRect(-c.w / 2, -c.h / 2, c.w, c.h);
-            fireworksCtx.restore();
-          });
-
-          fireworksCtx.globalAlpha = 1;
-          if (frame < 170) {
-            requestAnimationFrame(step);
-          } else {
-            fireworksCtx.clearRect(0, 0, fireworksCanvas.width, fireworksCanvas.height);
+            Effects.ctx.save();
+            Effects.ctx.translate(c.x, c.y);
+            Effects.ctx.rotate(c.rot);
+            Effects.ctx.fillStyle = c.color;
+            Effects.ctx.globalAlpha = frame < cfg.frames * 0.6 ? 0.85 : Math.max(0, (cfg.frames - frame) / (cfg.frames * 0.4));
+            Effects.ctx.fillRect(-c.w / 2, -c.h / 2, c.w, c.h);
+            Effects.ctx.restore();
           }
+
+          Effects.ctx.globalAlpha = 1;
+          if (frame < cfg.frames) requestAnimationFrame(step);
+          else Effects.ctx.clearRect(0, 0, els.fireworks.width, els.fireworks.height);
         }
 
-        step();
+        requestAnimationFrame(step);
       }
 
-      async function shareLayout() {
-        tickTimer();
-        updateUrl(gameSeed, difficulty, state, elapsedSeconds, notes, penaltyPoints);
-        const text = `来玩我这盘数独（含当前进度）：${window.location.href}`;
+      function startTimer(fromSeconds = 0) {
+        if (GameState.timer) clearInterval(GameState.timer);
+        GameState.elapsedSeconds = fromSeconds;
+        GameState.startedAt = Date.now() - fromSeconds * 1000;
+        UI.updateTimer();
+        GameState.timer = setInterval(() => {
+          if (!GameState.startedAt || GameState.completed || GameState.failed) return;
+          GameState.elapsedSeconds = Math.floor((Date.now() - GameState.startedAt) / 1000);
+          UI.updateTimer();
+          URLSync.schedule();
+        }, 1000);
+      }
 
+      function stopTimer() {
+        if (GameState.timer) {
+          clearInterval(GameState.timer);
+          GameState.timer = null;
+        }
+      }
+
+      function checkWin() {
+        if (GameState.state.includes(0)) return false;
+        for (let i = 0; i < 81; i += 1) {
+          if (GameState.state[i] !== GameState.solution[i]) return false;
+        }
+        return true;
+      }
+
+      function snapshot() {
+        return {
+          state: GameState.state.slice(),
+          notes: GameState.notes.slice(),
+          penaltyPoints: GameState.penaltyPoints,
+          elapsedSeconds: GameState.elapsedSeconds,
+          completed: GameState.completed,
+          failed: GameState.failed,
+          selected: GameState.selected,
+          wrongCount: GameState.wrongCount,
+          hintCount: GameState.hintCount,
+          candidateUseCount: GameState.candidateUseCount,
+        };
+      }
+
+      function saveHistory() {
+        GameState.undoStack.push(snapshot());
+        if (GameState.undoStack.length > 200) GameState.undoStack.shift();
+        GameState.redoStack = [];
+      }
+
+      function restoreSnapshot(snap) {
+        GameState.state = snap.state.slice();
+        GameState.notes = snap.notes.slice();
+        GameState.penaltyPoints = snap.penaltyPoints;
+        GameState.elapsedSeconds = snap.elapsedSeconds;
+        GameState.completed = snap.completed;
+        GameState.failed = snap.failed;
+        GameState.selected = snap.selected;
+        GameState.wrongCount = snap.wrongCount;
+        GameState.hintCount = snap.hintCount;
+        GameState.candidateUseCount = snap.candidateUseCount;
+        Scoring.recompute();
+        if (!GameState.completed && !GameState.failed) startTimer(GameState.elapsedSeconds);
+        else stopTimer();
+        UI.renderBoard();
+      }
+
+      function pushNormalScore(diff, sec, score) {
+        const scores = Storage.readScores();
+        const list = scores[diff] || [];
+        list.push({ time: sec, score });
+        list.sort((a, b) => (a.time !== b.time ? a.time - b.time : b.score - a.score));
+        scores[diff] = list.slice(0, 5);
+        Storage.writeScores(scores);
+      }
+
+      function pushDailyScore(day, diff, sec, score) {
+        const all = Storage.readDailyScores();
+        const key = `${day}:${diff}`;
+        const list = Array.isArray(all[key]) ? all[key] : [];
+        list.push({ time: sec, score });
+        list.sort((a, b) => (a.time !== b.time ? a.time - b.time : b.score - a.score));
+        all[key] = list.slice(0, 5);
+        Storage.writeDailyScores(all);
+        return all[key];
+      }
+
+      function applyPenalty(points, msg, sfx = "wrong") {
+        GameState.penaltyPoints += points;
+        Scoring.recompute();
+        vibrateWarn();
+        playSfx(sfx);
+        toast(`${msg}（-${points}分）`, false);
+        if (!GameState.failed && GameState.score <= Constants.FAIL_THRESHOLD) {
+          GameState.failed = true;
+          stopTimer();
+          playSfx("fail");
+          setStatus("分数跌破阈值，本局失败。点“再来一局”继续。");
+          toast("游戏失败：扣分过多。", false);
+          Game.openResult(false);
+        }
+      }
+
+      function clearDigitFromPeers(idx, digit) {
+        const bit = 1 << (digit - 1);
+        for (const p of Generator.peers(idx)) {
+          GameState.notes[p] &= ~bit;
+        }
+      }
+
+      function autoCandidates() {
+        saveHistory();
+        let touched = 0;
+        for (let i = 0; i < 81; i += 1) {
+          if (GameState.state[i] !== 0 || GameState.fixed[i]) continue;
+          const mask = Generator.candidateMask(GameState.state, i);
+          const prev = GameState.notes[i];
+          GameState.notes[i] = prev | mask;
+          if (GameState.notes[i] !== prev) touched += 1;
+        }
+        GameState.candidateUseCount += 1;
+        playSfx("note");
+        toast(touched > 0 ? `已自动补全候选（${touched}格更新）` : "候选已是最新", true);
+        UI.renderBoard();
+      }
+
+      function clearCandidates() {
+        saveHistory();
+        GameState.notes = new Array(81).fill(0);
+        playSfx("erase");
+        toast("已清空所有候选。", true);
+        UI.renderBoard();
+      }
+
+      const Game = {
+        generatePuzzle(seed, targetDiff) {
+          const target = DIFFICULTIES[targetDiff];
+          const randBase = mulberry32(seed);
+          let best = null;
+
+          for (let attempt = 0; attempt < 12; attempt += 1) {
+            const full = new Array(81).fill(0);
+            const rand = mulberry32(((seed ^ (attempt * 2654435761)) + Math.floor(randBase() * 1e9)) >>> 0);
+            Generator.fill(rand, full, 0);
+
+            const puzzle = full.slice();
+            const indexes = Generator.shuffle([...Array(81).keys()], rand);
+            let removed = 0;
+            let guard = 0;
+
+            for (const idx of indexes) {
+              if (removed >= target.holes || guard > 600) break;
+              guard += 1;
+              const old = puzzle[idx];
+              if (old === 0) continue;
+              puzzle[idx] = 0;
+              const solutions = Generator.countSolutions(puzzle, 2);
+              if (solutions === 1) removed += 1;
+              else puzzle[idx] = old;
+            }
+
+            const rating = Solver.solveAndRate(puzzle);
+            const gotDiff = Solver.classify(rating);
+            const cand = {
+              solved: full,
+              puzzle,
+              score: rating.difficultyScore,
+              tech: rating.stats,
+              gotDiff,
+              diffDistance: Math.abs(rating.difficultyScore - target.target),
+            };
+
+            if (!best || cand.diffDistance < best.diffDistance) best = cand;
+            if (gotDiff === targetDiff) return cand;
+          }
+
+          return best;
+        },
+        load(seed, options = {}) {
+          GameState.gameSeed = seed >>> 0;
+          const gen = this.generatePuzzle(GameState.gameSeed, GameState.difficulty);
+          GameState.solution = gen.solved;
+          GameState.puzzle = gen.puzzle;
+          GameState.state = gen.puzzle.slice();
+          GameState.fixed = gen.puzzle.map((v) => v !== 0);
+          GameState.notes = new Array(81).fill(0);
+          GameState.selected = -1;
+          GameState.completed = false;
+          GameState.failed = false;
+          GameState.noteMode = false;
+          GameState.undoStack = [];
+          GameState.redoStack = [];
+          GameState.wrongCount = 0;
+          GameState.hintCount = 0;
+          GameState.candidateUseCount = 0;
+          GameState.difficultyScore = gen.score;
+          GameState.difficultyTech = gen.tech;
+          els.body.classList.remove("victory-flash");
+          els.victoryBanner.classList.remove("show");
+
+          if (Array.isArray(options.progress) && options.progress.length === 81) {
+            for (let i = 0; i < 81; i += 1) {
+              if (!GameState.fixed[i] && options.progress[i] >= 0 && options.progress[i] <= 9) GameState.state[i] = options.progress[i];
+            }
+          }
+          if (Array.isArray(options.notes) && options.notes.length === 81) {
+            for (let i = 0; i < 81; i += 1) {
+              if (!GameState.fixed[i] && GameState.state[i] === 0) GameState.notes[i] = options.notes[i] & 511;
+            }
+          }
+
+          GameState.penaltyPoints = Number.isFinite(options.penaltyPoints) && options.penaltyPoints >= 0 ? Math.floor(options.penaltyPoints) : 0;
+          Scoring.recompute();
+
+          const initialSeconds = Number.isFinite(options.elapsed) && options.elapsed >= 0 ? Math.floor(options.elapsed) : 0;
+          if (GameState.score <= Constants.FAIL_THRESHOLD) {
+            GameState.failed = true;
+            GameState.elapsedSeconds = initialSeconds;
+            UI.updateTimer();
+            stopTimer();
+          } else {
+            startTimer(initialSeconds);
+          }
+
+          UI.updateBadges();
+          UI.renderDifficultyButtons();
+          UI.renderLeaderboard();
+          UI.renderBoard();
+          toast(options.restore ? "已恢复你分享的进度。" : "布局已生成，祝你玩得开心！", true);
+        },
+        complete() {
+          GameState.completed = true;
+          GameState.elapsedSeconds = Math.floor((Date.now() - GameState.startedAt) / 1000);
+          stopTimer();
+          playSfx("win");
+          launchFireworks();
+
+          if (GameState.mode === "daily") {
+            const list = pushDailyScore(GameState.day, GameState.difficulty, GameState.elapsedSeconds, GameState.score);
+            UI.renderLeaderboard();
+            const rank = list.findIndex((x) => x.time === GameState.elapsedSeconds && x.score === GameState.score) + 1;
+            this.openResult(true, rank);
+          } else {
+            pushNormalScore(GameState.difficulty, GameState.elapsedSeconds, GameState.score);
+            UI.renderLeaderboard();
+            this.openResult(true, null);
+          }
+          URLSync.flush(true);
+        },
+        openResult(win, dailyRank) {
+          const title = win ? "恭喜通关" : "本局失败";
+          const reason = win ? "你完成了本局数独。" : "扣分达到失败阈值。";
+          const lines = [
+            reason,
+            `模式：${GameState.mode === "daily" ? `每日挑战 ${GameState.day}` : "普通"}`,
+            `难度：${DIFFICULTIES[GameState.difficulty].label}`,
+            `用时：${fmtSec(GameState.elapsedSeconds)}`,
+            `得分：${GameState.score}`,
+            `错误次数：${GameState.wrongCount}`,
+            `提示次数：${GameState.hintCount}`,
+            `候选使用次数：${GameState.candidateUseCount}`,
+            `难度评分：${GameState.difficultyScore}（裸单元 ${GameState.difficultyTech.naked} / 隐单元 ${GameState.difficultyTech.hidden} / 区块摒除 ${GameState.difficultyTech.locked}）`,
+          ];
+          if (GameState.mode === "daily" && dailyRank) lines.push(`今日排名（本地）：#${dailyRank}`);
+          UI.openResultModal(title, lines);
+        },
+      };
+
+      function toggleNote(index, n) {
+        const bit = 1 << (n - 1);
+        GameState.notes[index] ^= bit;
+      }
+
+      function writeNumber(n) {
+        if (GameState.selected < 0 || GameState.fixed[GameState.selected] || GameState.completed || GameState.failed) return;
+        saveHistory();
+
+        if (GameState.noteMode && GameState.state[GameState.selected] === 0) {
+          toggleNote(GameState.selected, n);
+          GameState.candidateUseCount += 1;
+          playSfx("note");
+          toast("候选数已更新。", true);
+          UI.renderBoard();
+          return;
+        }
+
+        if (GameState.solution[GameState.selected] !== n) {
+          GameState.wrongCount += 1;
+          applyPenalty(Constants.WRONG_PENALTY, "填写错误，已扣分", "wrong");
+          UI.renderBoard();
+          return;
+        }
+
+        GameState.state[GameState.selected] = n;
+        GameState.notes[GameState.selected] = 0;
+        clearDigitFromPeers(GameState.selected, n);
+        playSfx("fill-ok");
+        toast("填写正确。", true);
+        UI.renderBoard();
+      }
+
+      function erase() {
+        if (GameState.selected < 0 || GameState.fixed[GameState.selected] || GameState.completed || GameState.failed) return;
+        saveHistory();
+        GameState.state[GameState.selected] = 0;
+        GameState.notes[GameState.selected] = 0;
+        playSfx("erase");
+        toast("已擦除该格。", true);
+        UI.renderBoard();
+      }
+
+      function giveHint() {
+        if (GameState.completed || GameState.failed) return;
+        const editable = [...Array(81).keys()].filter((i) => !GameState.fixed[i] && GameState.state[i] !== GameState.solution[i]);
+        if (editable.length === 0) {
+          toast("没有可提示的格子。", true);
+          return;
+        }
+        saveHistory();
+        const idx = editable[Math.floor(Math.random() * editable.length)];
+        GameState.state[idx] = GameState.solution[idx];
+        GameState.notes[idx] = 0;
+        clearDigitFromPeers(idx, GameState.solution[idx]);
+        GameState.selected = idx;
+        GameState.hintCount += 1;
+        applyPenalty(Constants.HINT_PENALTY, "使用提示，已扣分", "hint");
+        UI.renderBoard();
+      }
+
+      function undo() {
+        if (GameState.undoStack.length === 0) {
+          toast("没有可撤销的操作。", false);
+          return;
+        }
+        GameState.redoStack.push(snapshot());
+        const snap = GameState.undoStack.pop();
+        restoreSnapshot(snap);
+        playSfx("undo");
+        toast("已撤销一步。", true);
+      }
+
+      function redo() {
+        if (GameState.redoStack.length === 0) {
+          toast("没有可重做的操作（先撤销一步）。", false);
+          return;
+        }
+        GameState.undoStack.push(snapshot());
+        const snap = GameState.redoStack.pop();
+        restoreSnapshot(snap);
+        playSfx("redo");
+        toast("已重做一步。", true);
+      }
+
+      function createBoard() {
+        els.board.innerHTML = "";
+        GameState.cells = [];
+        for (let i = 0; i < 81; i += 1) {
+          const cell = document.createElement("button");
+          cell.type = "button";
+          cell.className = "cell";
+          cell.dataset.row = String(Math.floor(i / 9));
+          cell.dataset.col = String(i % 9);
+          cell.addEventListener("click", () => {
+            GameState.selected = i;
+            UI.renderBoard();
+          });
+          els.board.appendChild(cell);
+          GameState.cells.push(cell);
+        }
+      }
+
+      function createNumPad() {
+        els.numPad.innerHTML = "";
+        for (const n of Constants.DIGITS) {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "num-btn";
+          btn.textContent = String(n);
+          btn.addEventListener("click", () => writeNumber(n));
+          els.numPad.appendChild(btn);
+        }
+      }
+
+      function createDifficultyButtons() {
+        els.difficultyRow.innerHTML = "";
+        for (const key of Object.keys(DIFFICULTIES)) {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.dataset.diff = key;
+          btn.textContent = DIFFICULTIES[key].label;
+          btn.addEventListener("click", () => {
+            GameState.difficulty = key;
+            UI.renderDifficultyButtons();
+            UI.renderLeaderboard();
+            startNewGame();
+          });
+          els.difficultyRow.appendChild(btn);
+        }
+      }
+
+      function dailySeed(day, diff) {
+        return hashString(`${day}:${diff}:daily`);
+      }
+
+      function startNewGame(options = {}) {
+        const nowDay = localToday();
+        if (GameState.mode === "daily") {
+          GameState.day = options.day || nowDay;
+          const seed = dailySeed(GameState.day, GameState.difficulty);
+          Game.load(seed, options);
+        } else {
+          GameState.day = nowDay;
+          const seed = (Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0;
+          Game.load(seed, options);
+        }
+      }
+
+      function setMode(mode) {
+        if (!["normal", "daily"].includes(mode)) return;
+        GameState.mode = mode;
+        GameState.day = localToday();
+        startNewGame();
+      }
+
+      function exportData() {
+        try {
+          const payload = {
+            version: Constants.EXPORT_VERSION,
+            exportedAt: new Date().toISOString(),
+            scores: Storage.readScores(),
+            dailyScores: Storage.readDailyScores(),
+            settings: Settings,
+          };
+          const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `sudoku-party-backup-${localToday().replaceAll("-", "")}.json`;
+          a.click();
+          URL.revokeObjectURL(url);
+          toast("数据已导出。", true);
+        } catch {
+          toast("导出失败。", false);
+        }
+      }
+
+      async function importData(file) {
+        try {
+          const text = await file.text();
+          const data = JSON.parse(text);
+          if (!data || data.version !== Constants.EXPORT_VERSION) {
+            toast("导入失败：版本不兼容。", false);
+            return;
+          }
+
+          if (data.scores && typeof data.scores === "object") Storage.writeScores(data.scores);
+          if (data.dailyScores && typeof data.dailyScores === "object") Storage.writeDailyScores(data.dailyScores);
+          if (data.settings && typeof data.settings === "object") {
+            const s = data.settings;
+            if (typeof s.mute === "boolean") Settings.mute = s.mute;
+            if (Number.isFinite(s.volume)) Settings.volume = Math.max(0, Math.min(1, s.volume));
+            if (["low", "medium", "high"].includes(s.effectIntensity)) Settings.effectIntensity = s.effectIntensity;
+            if (typeof s.highContrast === "boolean") Settings.highContrast = s.highContrast;
+            if (typeof s.largeFont === "boolean") Settings.largeFont = s.largeFont;
+            Storage.writeSettings();
+            UI.applySettings();
+          }
+
+          UI.renderLeaderboard();
+          toast("数据导入成功。", true);
+        } catch {
+          toast("导入失败：文件内容无效。", false);
+        }
+      }
+
+      async function shareProgress() {
+        URLSync.flush(true);
+        const text = `来玩我这盘数独（含当前进度）：${window.location.href}`;
         try {
           if (navigator.share) {
-            await navigator.share({
-              title: "数独派对",
-              text: "这盘布局挺有意思，来试试！",
-              url: window.location.href,
-            });
-            setToast("已调用系统分享。", true);
+            await navigator.share({ title: "数独派对 Pro", text: "这盘布局挺有意思，来试试！", url: window.location.href });
+            toast("已调用系统分享。", true);
             return;
           }
-
           if (navigator.clipboard) {
             await navigator.clipboard.writeText(text);
-            setToast("进度链接已复制到剪贴板。", true);
+            toast("进度链接已复制到剪贴板。", true);
             return;
           }
-
-          throw new Error("No share or clipboard support");
+          throw new Error("unsupported");
         } catch {
-          setToast("分享失败，可直接复制地址栏链接。", false);
+          toast("分享失败，可直接复制地址栏链接。", false);
         }
       }
 
-      noteModeBtn.addEventListener("click", () => {
-        noteMode = !noteMode;
-        playSfx("note");
-        render();
-      });
-      undoBtn.addEventListener("click", undo);
-      redoBtn.addEventListener("click", redo);
-      document.getElementById("erase").addEventListener("click", erase);
-      document.getElementById("hint").addEventListener("click", giveHint);
-      document.getElementById("newGame").addEventListener("click", () => {
-        loadGame((Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0);
-      });
-      document.getElementById("share").addEventListener("click", shareLayout);
-      document.addEventListener("pointerdown", ensureAudio, { passive: true });
+      async function copyDailyLink() {
+        const u = new URL(window.location.href);
+        u.searchParams.set("mode", "daily");
+        u.searchParams.set("day", GameState.day);
+        u.searchParams.set("diff", GameState.difficulty);
+        u.searchParams.set("seed", String(dailySeed(GameState.day, GameState.difficulty)));
+        u.searchParams.set("v", Constants.URL_VERSION);
+        u.searchParams.delete("state");
+        u.searchParams.delete("notes");
+        u.searchParams.delete("t");
+        u.searchParams.delete("p");
 
-      document.addEventListener("keydown", (e) => {
-        ensureAudio();
-        if (e.key >= "1" && e.key <= "9") {
-          writeNumber(Number(e.key));
-        } else if (e.key === "Backspace" || e.key === "Delete" || e.key === "0") {
-          erase();
-        } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
-          if (e.shiftKey) redo();
-          else undo();
-        } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") {
-          redo();
-        } else if (e.key.toLowerCase() === "n") {
-          noteMode = !noteMode;
-          render();
-        } else if (e.key === "ArrowUp" && selected >= 9) {
-          selected -= 9;
-          render();
-        } else if (e.key === "ArrowDown" && selected <= 71 && selected >= 0) {
-          selected += 9;
-          render();
-        } else if (e.key === "ArrowLeft" && selected > 0) {
-          selected -= 1;
-          render();
-        } else if (e.key === "ArrowRight" && selected >= 0 && selected < 80) {
-          selected += 1;
-          render();
+        try {
+          if (navigator.clipboard) {
+            await navigator.clipboard.writeText(u.toString());
+            toast("今日挑战链接已复制。", true);
+            return;
+          }
+          throw new Error("no clipboard");
+        } catch {
+          toast("复制失败。", false);
         }
-      });
+      }
 
-      function bootstrap() {
-        createBoard();
-        createNumPad();
-        createDifficultyButtons();
+      function maybeConfirmNewGame() {
+        const inProgress = !GameState.completed && !GameState.failed && GameState.state.some((v, i) => !GameState.fixed[i] && v !== 0);
+        if (!inProgress) {
+          startNewGame();
+          return;
+        }
 
+        const coarse = window.matchMedia("(pointer: coarse)").matches;
+        if (!coarse) {
+          if (window.confirm("当前对局尚未完成，确认开新局？")) startNewGame();
+          return;
+        }
+
+        if (!window.confirm("短按会二次确认，长按可直接新开。确认现在新开吗？")) return;
+        startNewGame();
+      }
+
+      function bindNewGameLongPress() {
+        const btn = els.newGame;
+        const coarse = window.matchMedia("(pointer: coarse)").matches;
+        if (!coarse) {
+          btn.addEventListener("click", maybeConfirmNewGame);
+          return;
+        }
+
+        const start = () => {
+          GameState.longPressTriggered = false;
+          GameState.longPressTimer = setTimeout(() => {
+            GameState.longPressTriggered = true;
+            startNewGame();
+            toast("已长按快速新开。", true);
+          }, 450);
+        };
+
+        const end = () => {
+          if (GameState.longPressTimer) {
+            clearTimeout(GameState.longPressTimer);
+            GameState.longPressTimer = null;
+          }
+        };
+
+        btn.addEventListener("pointerdown", start);
+        btn.addEventListener("pointerup", () => {
+          const wasLong = GameState.longPressTriggered;
+          end();
+          if (!wasLong) maybeConfirmNewGame();
+        });
+        btn.addEventListener("pointerleave", end);
+        btn.addEventListener("pointercancel", end);
+        btn.addEventListener("click", (e) => e.preventDefault());
+      }
+
+      function applyModeFromURL(url) {
+        const m = url.searchParams.get("mode");
+        if (m === "daily" || m === "normal") GameState.mode = m;
+      }
+
+      function bootstrapFromURL() {
         const url = new URL(window.location.href);
-        const urlSeed = Number(url.searchParams.get("seed"));
-        const urlDiff = url.searchParams.get("diff");
-        const urlState = decodeState(url.searchParams.get("state"));
-        const urlNotes = decodeNotes(url.searchParams.get("notes"));
-        const urlElapsed = Number(url.searchParams.get("t"));
-        const urlPenalty = Number(url.searchParams.get("p"));
+        applyModeFromURL(url);
 
-        if (urlDiff && DIFFICULTIES[urlDiff]) difficulty = urlDiff;
+        const diff = url.searchParams.get("diff");
+        if (diff && DIFFICULTIES[diff]) GameState.difficulty = diff;
 
-        const startSeed = Number.isFinite(urlSeed) && urlSeed > 0 ? urlSeed : (Date.now() >>> 0);
-        loadGame(startSeed, {
-          progress: urlState,
-          notes: urlNotes,
-          elapsed: Number.isFinite(urlElapsed) ? urlElapsed : 0,
-          penaltyPoints: Number.isFinite(urlPenalty) ? urlPenalty : 0,
-          restore: Boolean(urlState || urlNotes),
+        const day = url.searchParams.get("day");
+        GameState.day = day || localToday();
+
+        const state = URLSync.decodeState(url.searchParams.get("state"));
+        const notes = URLSync.decodeNotes(url.searchParams.get("notes"));
+        const elapsed = Number(url.searchParams.get("t"));
+        const penalty = Number(url.searchParams.get("p"));
+
+        let seed = Number(url.searchParams.get("seed"));
+        if (!Number.isFinite(seed) || seed <= 0) {
+          seed = GameState.mode === "daily" ? dailySeed(GameState.day, GameState.difficulty) : ((Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0);
+        }
+
+        if (GameState.mode === "daily") seed = dailySeed(GameState.day, GameState.difficulty);
+
+        Game.load(seed, {
+          progress: state,
+          notes,
+          elapsed: Number.isFinite(elapsed) ? elapsed : 0,
+          penaltyPoints: Number.isFinite(penalty) ? penalty : 0,
+          restore: Boolean(state || notes),
         });
       }
 
-      window.addEventListener("beforeunload", () => {
-        updateUrl(gameSeed, difficulty, state, elapsedSeconds, notes, penaltyPoints);
-      });
+      function bindEvents() {
+        document.addEventListener("pointerdown", ensureAudio, { passive: true });
 
-      setInterval(() => {
-        if (!completed && !failed) updateUrl(gameSeed, difficulty, state, elapsedSeconds, notes, penaltyPoints);
-      }, 2000);
+        els.noteMode.addEventListener("click", () => {
+          GameState.noteMode = !GameState.noteMode;
+          playSfx("note");
+          UI.renderBoard();
+        });
+        els.autoCandidates.addEventListener("click", autoCandidates);
+        els.clearCandidates.addEventListener("click", clearCandidates);
+        els.undo.addEventListener("click", undo);
+        els.redo.addEventListener("click", redo);
+        els.erase.addEventListener("click", erase);
+        els.hint.addEventListener("click", giveHint);
+        els.share.addEventListener("click", shareProgress);
+        els.toggleSettings.addEventListener("click", () => {
+          GameState.settingsOpen = !GameState.settingsOpen;
+          UI.renderActionButtons();
+        });
+        els.modeNormal.addEventListener("click", () => setMode("normal"));
+        els.modeDaily.addEventListener("click", () => setMode("daily"));
+        els.copyDailyLink.addEventListener("click", copyDailyLink);
 
-      bootstrap();
+        bindNewGameLongPress();
+
+        els.muteBtn.addEventListener("click", () => {
+          Settings.mute = !Settings.mute;
+          UI.applySettings();
+          Storage.writeSettings();
+          toast(Settings.mute ? "已静音。" : "已取消静音。", true);
+        });
+
+        els.contrastBtn.addEventListener("click", () => {
+          Settings.highContrast = !Settings.highContrast;
+          UI.applySettings();
+          Storage.writeSettings();
+          toast(Settings.highContrast ? "已开启高对比。" : "已关闭高对比。", true);
+        });
+
+        els.fontBtn.addEventListener("click", () => {
+          Settings.largeFont = !Settings.largeFont;
+          UI.applySettings();
+          Storage.writeSettings();
+          toast(Settings.largeFont ? "已开启大字号。" : "已关闭大字号。", true);
+        });
+
+        els.volumeSlider.addEventListener("input", () => {
+          Settings.volume = Number(els.volumeSlider.value);
+          UI.applySettings();
+          Storage.writeSettings();
+          playTone(620, 0.03, "sine", 0.03);
+        });
+
+        for (const btn of els.effectRow.querySelectorAll("button")) {
+          btn.addEventListener("click", () => {
+            Settings.effectIntensity = btn.dataset.effect;
+            UI.applySettings();
+            Storage.writeSettings();
+            toast(`特效强度：${btn.textContent.replace("特效", "")}`, true);
+          });
+        }
+
+        els.exportData.addEventListener("click", exportData);
+        els.importData.addEventListener("click", () => els.importFile.click());
+        els.importFile.addEventListener("change", async (e) => {
+          const file = e.target.files && e.target.files[0];
+          if (!file) return;
+          await importData(file);
+          e.target.value = "";
+        });
+
+        els.resultClose.addEventListener("click", UI.closeResultModal);
+        els.resultRetry.addEventListener("click", () => {
+          UI.closeResultModal();
+          startNewGame();
+        });
+
+        document.addEventListener("keydown", (e) => {
+          ensureAudio();
+          if (e.key >= "1" && e.key <= "9") {
+            writeNumber(Number(e.key));
+          } else if (e.key === "Backspace" || e.key === "Delete" || e.key === "0") {
+            erase();
+          } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
+            if (e.shiftKey) redo();
+            else undo();
+          } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") {
+            redo();
+          } else if (e.key.toLowerCase() === "n") {
+            GameState.noteMode = !GameState.noteMode;
+            UI.renderBoard();
+          } else if (e.key === "ArrowUp" && GameState.selected >= 9) {
+            GameState.selected -= 9;
+            UI.renderBoard();
+          } else if (e.key === "ArrowDown" && GameState.selected <= 71 && GameState.selected >= 0) {
+            GameState.selected += 9;
+            UI.renderBoard();
+          } else if (e.key === "ArrowLeft" && GameState.selected > 0) {
+            GameState.selected -= 1;
+            UI.renderBoard();
+          } else if (e.key === "ArrowRight" && GameState.selected >= 0 && GameState.selected < 80) {
+            GameState.selected += 1;
+            UI.renderBoard();
+          }
+        });
+
+        window.addEventListener("beforeunload", () => URLSync.flush(true));
+        window.addEventListener("resize", resizeFireworks);
+      }
+
+      function init() {
+        Storage.readSettings();
+        UI.applySettings();
+        createBoard();
+        createNumPad();
+        createDifficultyButtons();
+        resizeFireworks();
+        bindEvents();
+        bootstrapFromURL();
+      }
+
+      init();
     </script>
   </body>
 </html>
