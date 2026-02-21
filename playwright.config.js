@@ -9,9 +9,10 @@ module.exports = defineConfig({
     trace: 'retain-on-failure',
   },
   webServer: {
-    command: 'python3 -m http.server 4173',
+    command: 'node scripts/static-server.cjs 4173 .',
     port: 4173,
     reuseExistingServer: true,
     timeout: 15000,
+    cwd: __dirname,
   },
 });

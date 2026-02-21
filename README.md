@@ -100,11 +100,42 @@ The app stores/reads game state from query params (versioned):
 - `sudoku-party-settings-v1`：用户设置
 - 兼容读取旧键：`sudoku-party-scores-v2`
 
+## Testing / 测试
+
+### EN
+- Install dependencies:
+  - `npm install`
+- Run all Playwright tests (headless, CI-friendly):
+  - `npm test`
+- Run fireworks test in headed mode (keeps browser open ~5 seconds at the end so you can watch effects):
+  - `npm run test:fireworks`
+- Run all tests in headed mode:
+  - `npm run test:headed`
+
+### 中文
+- 安装依赖：
+  - `npm install`
+- 运行全部 Playwright 测试（默认无头，适合 CI）：
+  - `npm test`
+- 运行烟花测试（有头模式，结尾会额外停留约 5 秒便于观察特效）：
+  - `npm run test:fireworks`
+- 运行全部测试（有头模式）：
+  - `npm run test:headed`
+
 ## Project Structure / 项目结构
 
 ```text
 project-root
-├── index.html   # single-file app (HTML/CSS/JS)
+├── index.html
+├── package.json
+├── playwright.config.js
+├── scripts/
+│   └── static-server.cjs
+├── tests/
+│   ├── fireworks.spec.js
+│   ├── sudoku.spec.js
+│   └── helpers/
+│       └── solve.js
 └── README.md
 ```
 
