@@ -578,7 +578,6 @@
         URL_VERSION: "3",
         EXPORT_VERSION: "sudoku-party-export-v1",
         SCORE_KEY: "sudoku-party-scores-v3",
-        LEGACY_SCORE_KEY: "sudoku-party-scores-v2",
         DAILY_SCORE_KEY: "sudoku-party-daily-v1",
         SETTINGS_KEY: "sudoku-party-settings-v1",
       };
@@ -1041,23 +1040,6 @@
                   .filter(Boolean)
                   .slice(0, 5);
               }
-              return base;
-            }
-          } catch {}
-
-          // legacy migration
-          try {
-            const legacyRaw = localStorage.getItem(Constants.LEGACY_SCORE_KEY);
-            if (legacyRaw) {
-              const legacy = JSON.parse(legacyRaw);
-              for (const k of ["easy", "medium", "hard"]) {
-                const arr = Array.isArray(legacy[k]) ? legacy[k] : [];
-                base[k] = arr
-                  .map((x) => (typeof x === "number" ? { time: Math.floor(x), score: Constants.START_SCORE } : null))
-                  .filter(Boolean)
-                  .slice(0, 5);
-              }
-              this.writeScores(base);
               return base;
             }
           } catch {}

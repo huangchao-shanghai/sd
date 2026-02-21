@@ -92,13 +92,11 @@ The app stores/reads game state from query params (versioned):
 - `sudoku-party-scores-v3`: normal leaderboard
 - `sudoku-party-daily-v1`: daily leaderboard
 - `sudoku-party-settings-v1`: user settings
-- Legacy read support: `sudoku-party-scores-v2`
 
 ### 中文
 - `sudoku-party-scores-v3`：普通模式排行榜
 - `sudoku-party-daily-v1`：每日挑战排行榜
 - `sudoku-party-settings-v1`：用户设置
-- 兼容读取旧键：`sudoku-party-scores-v2`
 
 ## Testing / 测试
 
