@@ -125,10 +125,18 @@ The app stores/reads game state from query params (versioned):
 ```text
 project-root
 ├── index.html
+├── styles.css
 ├── package.json
 ├── playwright.config.js
 ├── scripts/
 │   └── static-server.cjs
+├── src/
+│   ├── config.js
+│   ├── main.js
+│   ├── core/
+│   │   └── sudoku.js
+│   └── io/
+│       └── persistence.js
 ├── tests/
 │   ├── fireworks.spec.js
 │   ├── sudoku.spec.js
@@ -140,11 +148,11 @@ project-root
 ## Notes / 说明
 
 ### EN
-- This project is intentionally single-file for portability and easy sharing.
+- Frontend code is split into focused modules (`config`, `core`, `io`, `main`) while keeping zero-build portability.
 - No backend dependency.
 
 ### 中文
-- 项目刻意保持单文件，便于携带和分享。
+- 前端代码按 `config`、`core`、`io`、`main` 模块拆分，同时保持“零构建”可直接运行。
 - 无后端依赖。
 
 ## License / 开源协议
