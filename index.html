@@ -206,6 +206,12 @@
         gap: 6px;
       }
 
+      .lang-row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px;
+      }
+
       .settings-panel {
         display: none;
         gap: 10px;
@@ -250,6 +256,7 @@
 
       .difficulty-row button.active,
       .mode-row button.active,
+      .lang-row button.active,
       .effect-row button.active,
       .action-row button.active,
       .settings-row button.active {
@@ -475,6 +482,11 @@
               <button id="copyDailyLink"><span class="btn-ico" aria-hidden="true">🔗</span>复制今日链接</button>
             </div>
 
+            <div class="lang-row" id="langRow">
+              <button id="langZh">中文</button>
+              <button id="langEn">English</button>
+            </div>
+
             <div class="action-row">
               <button id="autoCandidates"><span class="btn-ico" aria-hidden="true">⚙</span>自动候选</button>
               <button id="clearCandidates"><span class="btn-ico" aria-hidden="true">⊘</span>清空候选</button>
@@ -493,7 +505,7 @@
             </div>
 
             <div class="slider-wrap">
-              <span>音量</span>
+              <span id="volumeLabel">音量</span>
               <input type="range" id="volumeSlider" min="0" max="1" step="0.01" />
               <span id="volumeText">70%</span>
             </div>
@@ -545,6 +557,233 @@
         hard: { label: "困难", holes: 54, scoreRange: [81, 999], target: 110 },
       };
 
+      const I18N = {
+        zh: {
+          "app.title": "数独派对 Pro",
+          "mode.normal": "普通",
+          "mode.daily": "每日挑战",
+          "label.mode": "模式：{mode}",
+          "label.day": "日期：{day}",
+          "label.timer": "计时：{time}",
+          "label.score": "得分：{score}",
+          "label.filled": "已填：{filled}/81",
+          "label.best.none": "最佳：--:--",
+          "label.best": "最佳：{time} ｜ {score}分",
+          "label.failThreshold": "失败阈值：{n}",
+          "label.meta": "难度：{diff} ｜ Seed: {seed}",
+          "leaderboard.normal": "本地排行榜（前 5）",
+          "leaderboard.daily": "今日排行榜（{day}，前 5）",
+          "leaderboard.empty.normal": "还没有成绩，快冲一把。",
+          "leaderboard.empty.daily": "今天还没有成绩。",
+          "btn.note": "笔记模式",
+          "btn.undo": "撤销",
+          "btn.redo": "重做",
+          "btn.erase": "擦除",
+          "btn.hint": "提示",
+          "btn.newGame": "新布局",
+          "btn.share": "分享进度",
+          "btn.settings": "设置",
+          "btn.copyDaily": "复制今日链接",
+          "btn.autoCandidates": "自动候选",
+          "btn.clearCandidates": "清空候选",
+          "btn.mute": "静音",
+          "btn.contrast": "高对比",
+          "btn.font": "大字号",
+          "btn.effect.low": "特效低",
+          "btn.effect.medium": "特效中",
+          "btn.effect.high": "特效高",
+          "btn.export": "导出数据",
+          "btn.import": "导入数据",
+          "btn.retry": "再来一局",
+          "btn.close": "关闭",
+          "label.volume": "音量",
+          "diff.easy": "简单",
+          "diff.medium": "中等",
+          "diff.hard": "困难",
+          "status.failed": "分数跌破阈值，本局失败。",
+          "status.start": "点击一个空格开始。",
+          "status.noteMode": "笔记模式已开启，点击空格后输入数字。",
+          "status.fixed": "这是预设数字，不能修改。",
+          "status.pos": "第 {r} 行，第 {c} 列{mode}",
+          "status.pos.noteSuffix": "（笔记模式）",
+          "status.failWithAction": "分数跌破阈值，本局失败。点“再来一局”继续。",
+          "toast.fail": "游戏失败：扣分过多。",
+          "toast.autoCandidates.updated": "已自动补全候选（{n}格更新）",
+          "toast.autoCandidates.latest": "候选已是最新",
+          "toast.clearCandidates": "已清空所有候选。",
+          "toast.restore": "已恢复你分享的进度。",
+          "toast.newPuzzle": "布局已生成，祝你玩得开心！",
+          "toast.noteUpdated": "候选数已更新。",
+          "toast.wrong": "填写错误，已扣分",
+          "toast.correct": "填写正确。",
+          "toast.erased": "已擦除该格。",
+          "toast.noHint": "没有可提示的格子。",
+          "toast.hintUsed": "使用提示，已扣分",
+          "toast.noUndo": "没有可撤销的操作。",
+          "toast.undo": "已撤销一步。",
+          "toast.noRedo": "没有可重做的操作（先撤销一步）。",
+          "toast.redo": "已重做一步。",
+          "toast.export.ok": "数据已导出。",
+          "toast.export.fail": "导出失败。",
+          "toast.import.badVersion": "导入失败：版本不兼容。",
+          "toast.import.ok": "数据导入成功。",
+          "toast.import.fail": "导入失败：文件内容无效。",
+          "toast.share.system": "已调用系统分享。",
+          "toast.share.copied": "进度链接已复制到剪贴板。",
+          "toast.share.fail": "分享失败，可直接复制地址栏链接。",
+          "toast.daily.copied": "今日挑战链接已复制。",
+          "toast.daily.copyFail": "复制失败。",
+          "toast.longPressNew": "已长按快速新开。",
+          "toast.mute.on": "已静音。",
+          "toast.mute.off": "已取消静音。",
+          "toast.contrast.on": "已开启高对比。",
+          "toast.contrast.off": "已关闭高对比。",
+          "toast.font.on": "已开启大字号。",
+          "toast.font.off": "已关闭大字号。",
+          "toast.effect": "特效强度：{name}",
+          "effect.low": "低",
+          "effect.medium": "中",
+          "effect.high": "高",
+          "confirm.new.desktop": "当前对局尚未完成，确认开新局？",
+          "confirm.new.mobile": "短按会二次确认，长按可直接新开。确认现在新开吗？",
+          "share.text": "来玩我这盘数独（含当前进度）：{url}",
+          "share.title": "数独派对 Pro",
+          "share.invite": "这盘布局挺有意思，来试试！",
+          "aria.fixed": "固定",
+          "aria.editable": "可编辑",
+          "aria.candidates": "候选 {value}",
+          "aria.empty": "空",
+          "aria.cell": "第 {r} 行第 {c} 列，{fixed}，当前 {value}",
+          "title.win": "恭喜通关",
+          "title.fail": "本局失败",
+          "result.winReason": "你完成了本局数独。",
+          "result.failReason": "扣分达到失败阈值。",
+          "result.mode": "模式：{mode}",
+          "result.mode.daily": "每日挑战 {day}",
+          "result.mode.normal": "普通",
+          "result.diff": "难度：{diff}",
+          "result.time": "用时：{time}",
+          "result.score": "得分：{score}",
+          "result.wrong": "错误次数：{n}",
+          "result.hint": "提示次数：{n}",
+          "result.candidate": "候选使用次数：{n}",
+          "result.rating": "难度评分：{score}（裸单元 {naked} / 隐单元 {hidden} / 区块摒除 {locked}）",
+          "result.dailyRank": "今日排名（本地）：#{n}",
+        },
+        en: {
+          "app.title": "Sudoku Party Pro",
+          "mode.normal": "Normal",
+          "mode.daily": "Daily",
+          "label.mode": "Mode: {mode}",
+          "label.day": "Day: {day}",
+          "label.timer": "Time: {time}",
+          "label.score": "Score: {score}",
+          "label.filled": "Filled: {filled}/81",
+          "label.best.none": "Best: --:--",
+          "label.best": "Best: {time} | {score} pts",
+          "label.failThreshold": "Fail Threshold: {n}",
+          "label.meta": "Difficulty: {diff} | Seed: {seed}",
+          "leaderboard.normal": "Local Leaderboard (Top 5)",
+          "leaderboard.daily": "Today's Leaderboard ({day}, Top 5)",
+          "leaderboard.empty.normal": "No records yet. Be the first!",
+          "leaderboard.empty.daily": "No scores yet today.",
+          "btn.note": "Notes",
+          "btn.undo": "Undo",
+          "btn.redo": "Redo",
+          "btn.erase": "Erase",
+          "btn.hint": "Hint",
+          "btn.newGame": "New Board",
+          "btn.share": "Share Progress",
+          "btn.settings": "Settings",
+          "btn.copyDaily": "Copy Daily Link",
+          "btn.autoCandidates": "Auto Candidates",
+          "btn.clearCandidates": "Clear Candidates",
+          "btn.mute": "Mute",
+          "btn.contrast": "High Contrast",
+          "btn.font": "Large Font",
+          "btn.effect.low": "FX Low",
+          "btn.effect.medium": "FX Medium",
+          "btn.effect.high": "FX High",
+          "btn.export": "Export Data",
+          "btn.import": "Import Data",
+          "btn.retry": "Play Again",
+          "btn.close": "Close",
+          "label.volume": "Volume",
+          "diff.easy": "Easy",
+          "diff.medium": "Medium",
+          "diff.hard": "Hard",
+          "status.failed": "Score dropped below threshold. Game over.",
+          "status.start": "Tap a cell to start.",
+          "status.noteMode": "Notes mode is on. Select a cell and enter digits.",
+          "status.fixed": "This is a fixed clue and cannot be edited.",
+          "status.pos": "Row {r}, Col {c}{mode}",
+          "status.pos.noteSuffix": " (notes mode)",
+          "status.failWithAction": "Score dropped below threshold. Tap Play Again.",
+          "toast.fail": "Game over: too many penalties.",
+          "toast.autoCandidates.updated": "Auto candidates updated ({n} cells).",
+          "toast.autoCandidates.latest": "Candidates are already up to date.",
+          "toast.clearCandidates": "All candidates cleared.",
+          "toast.restore": "Shared progress restored.",
+          "toast.newPuzzle": "New puzzle is ready. Have fun!",
+          "toast.noteUpdated": "Candidates updated.",
+          "toast.wrong": "Wrong input, penalty applied",
+          "toast.correct": "Correct input.",
+          "toast.erased": "Cell erased.",
+          "toast.noHint": "No hint available.",
+          "toast.hintUsed": "Hint used, penalty applied",
+          "toast.noUndo": "Nothing to undo.",
+          "toast.undo": "Undo applied.",
+          "toast.noRedo": "Nothing to redo (undo first).",
+          "toast.redo": "Redo applied.",
+          "toast.export.ok": "Data exported.",
+          "toast.export.fail": "Export failed.",
+          "toast.import.badVersion": "Import failed: incompatible version.",
+          "toast.import.ok": "Data imported.",
+          "toast.import.fail": "Import failed: invalid file.",
+          "toast.share.system": "System share opened.",
+          "toast.share.copied": "Progress link copied.",
+          "toast.share.fail": "Share failed. Copy URL manually.",
+          "toast.daily.copied": "Daily challenge link copied.",
+          "toast.daily.copyFail": "Copy failed.",
+          "toast.longPressNew": "Quick new board by long press.",
+          "toast.mute.on": "Muted.",
+          "toast.mute.off": "Unmuted.",
+          "toast.contrast.on": "High contrast on.",
+          "toast.contrast.off": "High contrast off.",
+          "toast.font.on": "Large font on.",
+          "toast.font.off": "Large font off.",
+          "toast.effect": "Effect intensity: {name}",
+          "effect.low": "Low",
+          "effect.medium": "Medium",
+          "effect.high": "High",
+          "confirm.new.desktop": "Current game is not finished. Start a new board?",
+          "confirm.new.mobile": "Tap asks confirmation; long press starts immediately. Start now?",
+          "share.text": "Try my Sudoku board (with progress): {url}",
+          "share.title": "Sudoku Party Pro",
+          "share.invite": "This board is fun, give it a try!",
+          "aria.fixed": "fixed",
+          "aria.editable": "editable",
+          "aria.candidates": "candidates {value}",
+          "aria.empty": "empty",
+          "aria.cell": "Row {r}, column {c}, {fixed}, current {value}",
+          "title.win": "You Win",
+          "title.fail": "Game Over",
+          "result.winReason": "You solved this Sudoku board.",
+          "result.failReason": "Penalty reached the fail threshold.",
+          "result.mode": "Mode: {mode}",
+          "result.mode.daily": "Daily {day}",
+          "result.mode.normal": "Normal",
+          "result.diff": "Difficulty: {diff}",
+          "result.time": "Time: {time}",
+          "result.score": "Score: {score}",
+          "result.wrong": "Wrong entries: {n}",
+          "result.hint": "Hints used: {n}",
+          "result.candidate": "Candidate uses: {n}",
+          "result.rating": "Difficulty score: {score} (Naked {naked} / Hidden {hidden} / Locked {locked})",
+          "result.dailyRank": "Today's local rank: #{n}",
+        },
+      };
+
       const els = {
         body: document.body,
         board: document.getElementById("board"),
@@ -576,10 +815,13 @@
         modeNormal: document.getElementById("modeNormal"),
         modeDaily: document.getElementById("modeDaily"),
         copyDailyLink: document.getElementById("copyDailyLink"),
+        langZh: document.getElementById("langZh"),
+        langEn: document.getElementById("langEn"),
         muteBtn: document.getElementById("muteBtn"),
         contrastBtn: document.getElementById("contrastBtn"),
         fontBtn: document.getElementById("fontBtn"),
         effectRow: document.getElementById("effectRow"),
+        volumeLabel: document.getElementById("volumeLabel"),
         volumeSlider: document.getElementById("volumeSlider"),
         volumeText: document.getElementById("volumeText"),
         exportData: document.getElementById("exportData"),
@@ -634,6 +876,7 @@
         effectIntensity: "medium",
         highContrast: false,
         largeFont: false,
+        language: "zh",
       };
 
       const Audio = {
@@ -680,6 +923,23 @@
         return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
       }
 
+      function t(key, vars = {}) {
+        const dict = I18N[Settings.language] || I18N.zh;
+        let str = dict[key] ?? I18N.zh[key] ?? key;
+        for (const [k, v] of Object.entries(vars)) {
+          str = str.replaceAll(`{${k}}`, String(v));
+        }
+        return str;
+      }
+
+      function diffLabel(diffKey) {
+        return t(`diff.${diffKey}`);
+      }
+
+      function setIconButtonText(el, icon, text) {
+        el.innerHTML = `<span class="btn-ico" aria-hidden="true">${icon}</span>${text}`;
+      }
+
       function toast(msg, ok = false) {
         els.toast.textContent = msg;
         els.toast.style.color = ok ? "#198754" : "#b23a48";
@@ -690,16 +950,25 @@
       }
 
       const Storage = {
+        detectLanguage() {
+          const lang = (navigator.language || "").toLowerCase();
+          return lang.startsWith("zh") ? "zh" : "en";
+        },
         readSettings() {
           try {
             const raw = localStorage.getItem(Constants.SETTINGS_KEY);
-            if (!raw) return;
+            if (!raw) {
+              Settings.language = this.detectLanguage();
+              return;
+            }
             const data = JSON.parse(raw);
             if (typeof data.mute === "boolean") Settings.mute = data.mute;
             if (Number.isFinite(data.volume)) Settings.volume = Math.min(1, Math.max(0, data.volume));
             if (["low", "medium", "high"].includes(data.effectIntensity)) Settings.effectIntensity = data.effectIntensity;
             if (typeof data.highContrast === "boolean") Settings.highContrast = data.highContrast;
             if (typeof data.largeFont === "boolean") Settings.largeFont = data.largeFont;
+            if (["zh", "en"].includes(data.language)) Settings.language = data.language;
+            else Settings.language = this.detectLanguage();
           } catch {}
         },
         writeSettings() {
@@ -1105,13 +1374,51 @@
       const Scoring = {
         recompute() {
           GameState.score = Math.max(0, Constants.START_SCORE - GameState.penaltyPoints);
-          els.score.textContent = `得分：${GameState.score}`;
-          els.danger.textContent = `失败阈值：${Constants.FAIL_THRESHOLD}`;
+          els.score.textContent = t("label.score", { score: GameState.score });
+          els.danger.textContent = t("label.failThreshold", { n: Constants.FAIL_THRESHOLD });
         },
       };
 
       const UI = {
+        applyLanguageTexts() {
+          document.documentElement.lang = Settings.language === "en" ? "en" : "zh-CN";
+          document.title = t("app.title");
+          els.victoryBanner.textContent = Settings.language === "en" ? "Perfect! Sudoku Cleared" : "Perfect! 数独通关";
+          const title = document.querySelector("h1");
+          if (title) title.textContent = t("app.title");
+
+          setIconButtonText(els.noteMode, "✎", t("btn.note"));
+          setIconButtonText(els.undo, "↶", t("btn.undo"));
+          setIconButtonText(els.redo, "↷", t("btn.redo"));
+          setIconButtonText(els.erase, "⌫", t("btn.erase"));
+          setIconButtonText(els.hint, "💡", t("btn.hint"));
+          setIconButtonText(els.newGame, "⟳", t("btn.newGame"));
+          setIconButtonText(els.share, "🔗", t("btn.share"));
+          setIconButtonText(els.toggleSettings, "⚙", t("btn.settings"));
+          setIconButtonText(els.copyDailyLink, "🔗", t("btn.copyDaily"));
+          setIconButtonText(els.autoCandidates, "⚙", t("btn.autoCandidates"));
+          setIconButtonText(els.clearCandidates, "⊘", t("btn.clearCandidates"));
+          setIconButtonText(els.muteBtn, "🔊", t("btn.mute"));
+          setIconButtonText(els.contrastBtn, "◐", t("btn.contrast"));
+          setIconButtonText(els.fontBtn, "A+", t("btn.font"));
+          setIconButtonText(els.exportData, "⬇", t("btn.export"));
+          setIconButtonText(els.importData, "⬆", t("btn.import"));
+
+          els.modeNormal.textContent = t("mode.normal");
+          els.modeDaily.textContent = t("mode.daily");
+          els.langZh.textContent = "中文";
+          els.langEn.textContent = "English";
+          els.resultRetry.textContent = t("btn.retry");
+          els.resultClose.textContent = t("btn.close");
+          els.volumeLabel.textContent = t("label.volume");
+
+          for (const btn of els.effectRow.querySelectorAll("button")) {
+            const level = btn.dataset.effect;
+            btn.textContent = t(`btn.effect.${level}`);
+          }
+        },
         applySettings() {
+          this.applyLanguageTexts();
           els.body.classList.toggle("high-contrast", Settings.highContrast);
           els.body.classList.toggle("large-font", Settings.largeFont);
           els.muteBtn.classList.toggle("active", Settings.mute);
@@ -1120,28 +1427,28 @@
           els.contrastBtn.setAttribute("aria-pressed", String(Settings.highContrast));
           els.fontBtn.classList.toggle("active", Settings.largeFont);
           els.fontBtn.setAttribute("aria-pressed", String(Settings.largeFont));
+          els.langZh.classList.toggle("active", Settings.language === "zh");
+          els.langEn.classList.toggle("active", Settings.language === "en");
           els.volumeSlider.value = String(Settings.volume);
           els.volumeText.textContent = `${Math.round(Settings.volume * 100)}%`;
-
-          const btns = [...els.effectRow.querySelectorAll("button")];
-          for (const btn of btns) {
+          for (const btn of els.effectRow.querySelectorAll("button")) {
             btn.classList.toggle("active", btn.dataset.effect === Settings.effectIntensity);
           }
         },
         updateTimer() {
-          els.timer.textContent = `计时：${fmtSec(GameState.elapsedSeconds)}`;
+          els.timer.textContent = t("label.timer", { time: fmtSec(GameState.elapsedSeconds) });
         },
         updateBadges() {
-          const modeText = GameState.mode === "daily" ? "每日挑战" : "普通";
-          els.modeBadge.textContent = `模式：${modeText}`;
-          els.dayBadge.textContent = `日期：${GameState.day || "--"}`;
-          els.meta.textContent = `难度：${DIFFICULTIES[GameState.difficulty].label} ｜ Seed: ${GameState.gameSeed}`;
+          const modeText = GameState.mode === "daily" ? t("mode.daily") : t("mode.normal");
+          els.modeBadge.textContent = t("label.mode", { mode: modeText });
+          els.dayBadge.textContent = t("label.day", { day: GameState.day || "--" });
+          els.meta.textContent = t("label.meta", { diff: diffLabel(GameState.difficulty), seed: GameState.gameSeed });
           els.modeNormal.classList.toggle("active", GameState.mode === "normal");
           els.modeDaily.classList.toggle("active", GameState.mode === "daily");
         },
         updateProgress() {
           const filled = GameState.state.filter((v) => v !== 0).length;
-          els.filled.textContent = `已填：${filled}/81`;
+          els.filled.textContent = t("label.filled", { filled });
         },
         renderDifficultyButtons() {
           for (const btn of els.difficultyRow.querySelectorAll("button")) {
@@ -1153,8 +1460,8 @@
           els.noteMode.setAttribute("aria-pressed", String(GameState.noteMode));
           els.undo.disabled = GameState.undoStack.length === 0;
           els.redo.disabled = GameState.redoStack.length === 0;
-          els.undo.title = "撤销上一步";
-          els.redo.title = "重做被撤销的一步";
+          els.undo.title = t("btn.undo");
+          els.redo.title = t("btn.redo");
           els.toggleSettings.classList.toggle("active", GameState.settingsOpen);
           els.toggleSettings.setAttribute("aria-expanded", String(GameState.settingsOpen));
           els.settingsPanel.classList.toggle("open", GameState.settingsOpen);
@@ -1169,9 +1476,9 @@
         setCellAria(cell, i) {
           const r = Math.floor(i / 9) + 1;
           const c = (i % 9) + 1;
-          const fixed = GameState.fixed[i] ? "固定" : "可编辑";
-          const value = GameState.state[i] || (GameState.notes[i] ? `候选 ${this.noteDigits(GameState.notes[i])}` : "空");
-          cell.setAttribute("aria-label", `第 ${r} 行第 ${c} 列，${fixed}，当前 ${value}`);
+          const fixed = GameState.fixed[i] ? t("aria.fixed") : t("aria.editable");
+          const value = GameState.state[i] || (GameState.notes[i] ? t("aria.candidates", { value: this.noteDigits(GameState.notes[i]) }) : t("aria.empty"));
+          cell.setAttribute("aria-label", t("aria.cell", { r, c, fixed, value }));
         },
         renderBoard() {
           const bad = new Set();
@@ -1218,15 +1525,15 @@
           URLSync.schedule();
 
           if (GameState.failed) {
-            setStatus("分数跌破阈值，本局失败。");
+            setStatus(t("status.failed"));
           } else if (GameState.selected < 0) {
-            setStatus(GameState.noteMode ? "笔记模式已开启，点击空格后输入数字。" : "点击一个空格开始。");
+            setStatus(GameState.noteMode ? t("status.noteMode") : t("status.start"));
           } else if (GameState.fixed[GameState.selected]) {
-            setStatus("这是预设数字，不能修改。");
+            setStatus(t("status.fixed"));
           } else {
             const rr = Math.floor(GameState.selected / 9) + 1;
             const cc = (GameState.selected % 9) + 1;
-            setStatus(`第 ${rr} 行，第 ${cc} 列${GameState.noteMode ? "（笔记模式）" : ""}`);
+            setStatus(t("status.pos", { r: rr, c: cc, mode: GameState.noteMode ? t("status.pos.noteSuffix") : "" }));
           }
 
           if (!GameState.completed && !GameState.failed && checkWin()) {
@@ -1239,39 +1546,39 @@
             const dayKey = `${GameState.day}:${GameState.difficulty}`;
             const map = Storage.readDailyScores();
             const list = Array.isArray(map[dayKey]) ? map[dayKey] : [];
-            els.leaderboardTitle.textContent = `今日排行榜（${GameState.day}，前 5）`;
+            els.leaderboardTitle.textContent = t("leaderboard.daily", { day: GameState.day });
             if (list.length === 0) {
               const li = document.createElement("li");
-              li.textContent = "今天还没有成绩。";
+              li.textContent = t("leaderboard.empty.daily");
               els.leaderboard.appendChild(li);
-              els.best.textContent = "最佳：--:--";
+              els.best.textContent = t("label.best.none");
               return;
             }
             list.forEach((e, i) => {
               const li = document.createElement("li");
-              li.textContent = `#${i + 1} ${fmtSec(e.time)} ｜ ${e.score}分`;
+              li.textContent = `#${i + 1} ${fmtSec(e.time)} | ${e.score}`;
               els.leaderboard.appendChild(li);
             });
-            els.best.textContent = `最佳：${fmtSec(list[0].time)} ｜ ${list[0].score}分`;
+            els.best.textContent = t("label.best", { time: fmtSec(list[0].time), score: list[0].score });
             return;
           }
 
           const scores = Storage.readScores();
           const list = scores[GameState.difficulty] || [];
-          els.leaderboardTitle.textContent = "本地排行榜（前 5）";
+          els.leaderboardTitle.textContent = t("leaderboard.normal");
           if (list.length === 0) {
             const li = document.createElement("li");
-            li.textContent = "还没有成绩，快冲一把。";
+            li.textContent = t("leaderboard.empty.normal");
             els.leaderboard.appendChild(li);
-            els.best.textContent = "最佳：--:--";
+            els.best.textContent = t("label.best.none");
             return;
           }
           list.forEach((e, i) => {
             const li = document.createElement("li");
-            li.textContent = `#${i + 1} ${fmtSec(e.time)} ｜ ${e.score}分`;
+            li.textContent = `#${i + 1} ${fmtSec(e.time)} | ${e.score}`;
             els.leaderboard.appendChild(li);
           });
-          els.best.textContent = `最佳：${fmtSec(list[0].time)} ｜ ${list[0].score}分`;
+          els.best.textContent = t("label.best", { time: fmtSec(list[0].time), score: list[0].score });
         },
         openResultModal(title, lines) {
           els.resultTitle.textContent = title;
@@ -1523,13 +1830,13 @@
         Scoring.recompute();
         vibrateWarn();
         playSfx(sfx);
-        toast(`${msg}（-${points}分）`, false);
+        toast(`${msg} (-${points})`, false);
         if (!GameState.failed && GameState.score <= Constants.FAIL_THRESHOLD) {
           GameState.failed = true;
           stopTimer();
           playSfx("fail");
-          setStatus("分数跌破阈值，本局失败。点“再来一局”继续。");
-          toast("游戏失败：扣分过多。", false);
+          setStatus(t("status.failWithAction"));
+          toast(t("toast.fail"), false);
           Game.openResult(false);
         }
       }
@@ -1553,7 +1860,7 @@
         }
         GameState.candidateUseCount += 1;
         playSfx("note");
-        toast(touched > 0 ? `已自动补全候选（${touched}格更新）` : "候选已是最新", true);
+        toast(touched > 0 ? t("toast.autoCandidates.updated", { n: touched }) : t("toast.autoCandidates.latest"), true);
         UI.renderBoard();
       }
 
@@ -1561,7 +1868,7 @@
         saveHistory();
         GameState.notes = new Array(81).fill(0);
         playSfx("erase");
-        toast("已清空所有候选。", true);
+        toast(t("toast.clearCandidates"), true);
         UI.renderBoard();
       }
 
@@ -1659,7 +1966,7 @@
           UI.renderDifficultyButtons();
           UI.renderLeaderboard();
           UI.renderBoard();
-          toast(options.restore ? "已恢复你分享的进度。" : "布局已生成，祝你玩得开心！", true);
+          toast(options.restore ? t("toast.restore") : t("toast.newPuzzle"), true);
         },
         complete() {
           GameState.completed = true;
@@ -1681,20 +1988,25 @@
           URLSync.flush(true);
         },
         openResult(win, dailyRank) {
-          const title = win ? "恭喜通关" : "本局失败";
-          const reason = win ? "你完成了本局数独。" : "扣分达到失败阈值。";
+          const title = win ? t("title.win") : t("title.fail");
+          const reason = win ? t("result.winReason") : t("result.failReason");
           const lines = [
             reason,
-            `模式：${GameState.mode === "daily" ? `每日挑战 ${GameState.day}` : "普通"}`,
-            `难度：${DIFFICULTIES[GameState.difficulty].label}`,
-            `用时：${fmtSec(GameState.elapsedSeconds)}`,
-            `得分：${GameState.score}`,
-            `错误次数：${GameState.wrongCount}`,
-            `提示次数：${GameState.hintCount}`,
-            `候选使用次数：${GameState.candidateUseCount}`,
-            `难度评分：${GameState.difficultyScore}（裸单元 ${GameState.difficultyTech.naked} / 隐单元 ${GameState.difficultyTech.hidden} / 区块摒除 ${GameState.difficultyTech.locked}）`,
+            t("result.mode", { mode: GameState.mode === "daily" ? t("result.mode.daily", { day: GameState.day }) : t("result.mode.normal") }),
+            t("result.diff", { diff: diffLabel(GameState.difficulty) }),
+            t("result.time", { time: fmtSec(GameState.elapsedSeconds) }),
+            t("result.score", { score: GameState.score }),
+            t("result.wrong", { n: GameState.wrongCount }),
+            t("result.hint", { n: GameState.hintCount }),
+            t("result.candidate", { n: GameState.candidateUseCount }),
+            t("result.rating", {
+              score: GameState.difficultyScore,
+              naked: GameState.difficultyTech.naked,
+              hidden: GameState.difficultyTech.hidden,
+              locked: GameState.difficultyTech.locked,
+            }),
           ];
-          if (GameState.mode === "daily" && dailyRank) lines.push(`今日排名（本地）：#${dailyRank}`);
+          if (GameState.mode === "daily" && dailyRank) lines.push(t("result.dailyRank", { n: dailyRank }));
           UI.openResultModal(title, lines);
         },
       };
@@ -1712,14 +2024,14 @@
           toggleNote(GameState.selected, n);
           GameState.candidateUseCount += 1;
           playSfx("note");
-          toast("候选数已更新。", true);
+          toast(t("toast.noteUpdated"), true);
           UI.renderBoard();
           return;
         }
 
         if (GameState.solution[GameState.selected] !== n) {
           GameState.wrongCount += 1;
-          applyPenalty(Constants.WRONG_PENALTY, "填写错误，已扣分", "wrong");
+          applyPenalty(Constants.WRONG_PENALTY, t("toast.wrong"), "wrong");
           UI.renderBoard();
           return;
         }
@@ -1728,7 +2040,7 @@
         GameState.notes[GameState.selected] = 0;
         clearDigitFromPeers(GameState.selected, n);
         playSfx("fill-ok");
-        toast("填写正确。", true);
+        toast(t("toast.correct"), true);
         UI.renderBoard();
       }
 
@@ -1738,7 +2050,7 @@
         GameState.state[GameState.selected] = 0;
         GameState.notes[GameState.selected] = 0;
         playSfx("erase");
-        toast("已擦除该格。", true);
+        toast(t("toast.erased"), true);
         UI.renderBoard();
       }
 
@@ -1746,7 +2058,7 @@
         if (GameState.completed || GameState.failed) return;
         const editable = [...Array(81).keys()].filter((i) => !GameState.fixed[i] && GameState.state[i] !== GameState.solution[i]);
         if (editable.length === 0) {
-          toast("没有可提示的格子。", true);
+          toast(t("toast.noHint"), true);
           return;
         }
         saveHistory();
@@ -1756,32 +2068,32 @@
         clearDigitFromPeers(idx, GameState.solution[idx]);
         GameState.selected = idx;
         GameState.hintCount += 1;
-        applyPenalty(Constants.HINT_PENALTY, "使用提示，已扣分", "hint");
+        applyPenalty(Constants.HINT_PENALTY, t("toast.hintUsed"), "hint");
         UI.renderBoard();
       }
 
       function undo() {
         if (GameState.undoStack.length === 0) {
-          toast("没有可撤销的操作。", false);
+          toast(t("toast.noUndo"), false);
           return;
         }
         GameState.redoStack.push(snapshot());
         const snap = GameState.undoStack.pop();
         restoreSnapshot(snap);
         playSfx("undo");
-        toast("已撤销一步。", true);
+        toast(t("toast.undo"), true);
       }
 
       function redo() {
         if (GameState.redoStack.length === 0) {
-          toast("没有可重做的操作（先撤销一步）。", false);
+          toast(t("toast.noRedo"), false);
           return;
         }
         GameState.undoStack.push(snapshot());
         const snap = GameState.redoStack.pop();
         restoreSnapshot(snap);
         playSfx("redo");
-        toast("已重做一步。", true);
+        toast(t("toast.redo"), true);
       }
 
       function createBoard() {
@@ -1820,7 +2132,7 @@
           const btn = document.createElement("button");
           btn.type = "button";
           btn.dataset.diff = key;
-          btn.textContent = DIFFICULTIES[key].label;
+          btn.textContent = diffLabel(key);
           btn.addEventListener("click", () => {
             GameState.difficulty = key;
             UI.renderDifficultyButtons();
@@ -1871,9 +2183,9 @@
           a.download = `sudoku-party-backup-${localToday().replaceAll("-", "")}.json`;
           a.click();
           URL.revokeObjectURL(url);
-          toast("数据已导出。", true);
+          toast(t("toast.export.ok"), true);
         } catch {
-          toast("导出失败。", false);
+          toast(t("toast.export.fail"), false);
         }
       }
 
@@ -1882,7 +2194,7 @@
           const text = await file.text();
           const data = JSON.parse(text);
           if (!data || data.version !== Constants.EXPORT_VERSION) {
-            toast("导入失败：版本不兼容。", false);
+            toast(t("toast.import.badVersion"), false);
             return;
           }
 
@@ -1895,34 +2207,35 @@
             if (["low", "medium", "high"].includes(s.effectIntensity)) Settings.effectIntensity = s.effectIntensity;
             if (typeof s.highContrast === "boolean") Settings.highContrast = s.highContrast;
             if (typeof s.largeFont === "boolean") Settings.largeFont = s.largeFont;
+            if (["zh", "en"].includes(s.language)) Settings.language = s.language;
             Storage.writeSettings();
             UI.applySettings();
           }
 
           UI.renderLeaderboard();
-          toast("数据导入成功。", true);
+          toast(t("toast.import.ok"), true);
         } catch {
-          toast("导入失败：文件内容无效。", false);
+          toast(t("toast.import.fail"), false);
         }
       }
 
       async function shareProgress() {
         URLSync.flush(true);
-        const text = `来玩我这盘数独（含当前进度）：${window.location.href}`;
+        const text = t("share.text", { url: window.location.href });
         try {
           if (navigator.share) {
-            await navigator.share({ title: "数独派对 Pro", text: "这盘布局挺有意思，来试试！", url: window.location.href });
-            toast("已调用系统分享。", true);
+            await navigator.share({ title: t("share.title"), text: t("share.invite"), url: window.location.href });
+            toast(t("toast.share.system"), true);
             return;
           }
           if (navigator.clipboard) {
             await navigator.clipboard.writeText(text);
-            toast("进度链接已复制到剪贴板。", true);
+            toast(t("toast.share.copied"), true);
             return;
           }
           throw new Error("unsupported");
         } catch {
-          toast("分享失败，可直接复制地址栏链接。", false);
+          toast(t("toast.share.fail"), false);
         }
       }
 
@@ -1941,12 +2254,12 @@
         try {
           if (navigator.clipboard) {
             await navigator.clipboard.writeText(u.toString());
-            toast("今日挑战链接已复制。", true);
+            toast(t("toast.daily.copied"), true);
             return;
           }
           throw new Error("no clipboard");
         } catch {
-          toast("复制失败。", false);
+          toast(t("toast.daily.copyFail"), false);
         }
       }
 
@@ -1959,11 +2272,11 @@
 
         const coarse = window.matchMedia("(pointer: coarse)").matches;
         if (!coarse) {
-          if (window.confirm("当前对局尚未完成，确认开新局？")) startNewGame();
+          if (window.confirm(t("confirm.new.desktop"))) startNewGame();
           return;
         }
 
-        if (!window.confirm("短按会二次确认，长按可直接新开。确认现在新开吗？")) return;
+        if (!window.confirm(t("confirm.new.mobile"))) return;
         startNewGame();
       }
 
@@ -1980,7 +2293,7 @@
           GameState.longPressTimer = setTimeout(() => {
             GameState.longPressTriggered = true;
             startNewGame();
-            toast("已长按快速新开。", true);
+            toast(t("toast.longPressNew"), true);
           }, 450);
         };
 
@@ -2060,6 +2373,26 @@
         els.modeNormal.addEventListener("click", () => setMode("normal"));
         els.modeDaily.addEventListener("click", () => setMode("daily"));
         els.copyDailyLink.addEventListener("click", copyDailyLink);
+        els.langZh.addEventListener("click", () => {
+          Settings.language = "zh";
+          Storage.writeSettings();
+          UI.applySettings();
+          createDifficultyButtons();
+          UI.renderDifficultyButtons();
+          UI.updateBadges();
+          UI.renderLeaderboard();
+          UI.renderBoard();
+        });
+        els.langEn.addEventListener("click", () => {
+          Settings.language = "en";
+          Storage.writeSettings();
+          UI.applySettings();
+          createDifficultyButtons();
+          UI.renderDifficultyButtons();
+          UI.updateBadges();
+          UI.renderLeaderboard();
+          UI.renderBoard();
+        });
 
         bindNewGameLongPress();
 
@@ -2067,21 +2400,21 @@
           Settings.mute = !Settings.mute;
           UI.applySettings();
           Storage.writeSettings();
-          toast(Settings.mute ? "已静音。" : "已取消静音。", true);
+          toast(Settings.mute ? t("toast.mute.on") : t("toast.mute.off"), true);
         });
 
         els.contrastBtn.addEventListener("click", () => {
           Settings.highContrast = !Settings.highContrast;
           UI.applySettings();
           Storage.writeSettings();
-          toast(Settings.highContrast ? "已开启高对比。" : "已关闭高对比。", true);
+          toast(Settings.highContrast ? t("toast.contrast.on") : t("toast.contrast.off"), true);
         });
 
         els.fontBtn.addEventListener("click", () => {
           Settings.largeFont = !Settings.largeFont;
           UI.applySettings();
           Storage.writeSettings();
-          toast(Settings.largeFont ? "已开启大字号。" : "已关闭大字号。", true);
+          toast(Settings.largeFont ? t("toast.font.on") : t("toast.font.off"), true);
         });
 
         els.volumeSlider.addEventListener("input", () => {
@@ -2096,7 +2429,7 @@
             Settings.effectIntensity = btn.dataset.effect;
             UI.applySettings();
             Storage.writeSettings();
-            toast(`特效强度：${btn.textContent.replace("特效", "")}`, true);
+            toast(t("toast.effect", { name: t(`effect.${btn.dataset.effect}`) }), true);
           });
         }
 
@@ -2150,6 +2483,7 @@
 
       function init() {
         Storage.readSettings();
+        Storage.writeSettings();
         UI.applySettings();
         createBoard();
         createNumPad();
