@@ -98,12 +98,6 @@
         gap: 8px;
       }
 
-      .mode-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-      }
-
       .main {
         display: grid;
         gap: 14px;
@@ -551,9 +545,9 @@
       };
 
       const DIFFICULTIES = {
-        easy: { label: "简单", holes: 38, scoreRange: [0, 30], target: 20 },
-        medium: { label: "中等", holes: 46, scoreRange: [31, 80], target: 55 },
-        hard: { label: "困难", holes: 54, scoreRange: [81, 999], target: 110 },
+        easy: { holes: 38, target: 20 },
+        medium: { holes: 46, target: 55 },
+        hard: { holes: 54, target: 110 },
       };
 
       const I18N = {
@@ -879,7 +873,7 @@
         language: "zh",
       };
 
-      const Audio = {
+      const AudioState = {
         ctx: null,
         ready: false,
       };
@@ -1054,22 +1048,22 @@
 
       function ensureAudio() {
         if (Settings.mute) return false;
-        if (!Audio.ctx) {
+        if (!AudioState.ctx) {
           const Ctx = window.AudioContext || window.webkitAudioContext;
           if (!Ctx) return false;
-          Audio.ctx = new Ctx();
+          AudioState.ctx = new Ctx();
         }
-        if (Audio.ctx.state === "suspended") Audio.ctx.resume();
-        Audio.ready = true;
+        if (AudioState.ctx.state === "suspended") AudioState.ctx.resume();
+        AudioState.ready = true;
         return true;
       }
 
       function playTone(freq, duration, type = "sine", volume = 0.05, when = 0) {
         if (Settings.mute) return;
-        if (!Audio.ready && !ensureAudio()) return;
-        const now = Audio.ctx.currentTime + when;
-        const osc = Audio.ctx.createOscillator();
-        const gain = Audio.ctx.createGain();
+        if (!AudioState.ready && !ensureAudio()) return;
+        const now = AudioState.ctx.currentTime + when;
+        const osc = AudioState.ctx.createOscillator();
+        const gain = AudioState.ctx.createGain();
         osc.type = type;
         osc.frequency.setValueAtTime(freq, now);
         const vol = volume * Settings.volume;
@@ -1077,14 +1071,14 @@
         gain.gain.exponentialRampToValueAtTime(Math.max(0.0002, vol), now + 0.01);
         gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
         osc.connect(gain);
-        gain.connect(Audio.ctx.destination);
+        gain.connect(AudioState.ctx.destination);
         osc.start(now);
         osc.stop(now + duration + 0.03);
       }
 
       function playSfx(name) {
         if (Settings.mute) return;
-        if (!Audio.ready && !ensureAudio()) return;
+        if (!AudioState.ready && !ensureAudio()) return;
 
         if (name === "fill-ok") {
           playTone(660, 0.09, "triangle", 0.04);
@@ -1608,6 +1602,7 @@
             els.resultBody.appendChild(p);
           }
           els.resultModal.classList.add("open");
+          document.body.style.overflow = "hidden";
           requestAnimationFrame(() => {
             els.resultRetry.focus();
           });
@@ -1621,6 +1616,7 @@
         },
         closeResultModal() {
           els.resultModal.classList.remove("open");
+          document.body.style.overflow = "";
           if (GameState.modalLastFocused && typeof GameState.modalLastFocused.focus === "function") {
             GameState.modalLastFocused.focus();
           }
@@ -2205,6 +2201,17 @@
         startNewGame();
       }
 
+      function setLanguage(lang) {
+        Settings.language = lang;
+        Storage.writeSettings();
+        UI.applySettings();
+        createDifficultyButtons();
+        UI.renderDifficultyButtons();
+        UI.updateBadges();
+        UI.renderLeaderboard();
+        UI.renderBoard();
+      }
+
       function exportData() {
         try {
           const payload = {
@@ -2411,26 +2418,8 @@
         els.modeNormal.addEventListener("click", () => setMode("normal"));
         els.modeDaily.addEventListener("click", () => setMode("daily"));
         els.copyDailyLink.addEventListener("click", copyDailyLink);
-        els.langZh.addEventListener("click", () => {
-          Settings.language = "zh";
-          Storage.writeSettings();
-          UI.applySettings();
-          createDifficultyButtons();
-          UI.renderDifficultyButtons();
-          UI.updateBadges();
-          UI.renderLeaderboard();
-          UI.renderBoard();
-        });
-        els.langEn.addEventListener("click", () => {
-          Settings.language = "en";
-          Storage.writeSettings();
-          UI.applySettings();
-          createDifficultyButtons();
-          UI.renderDifficultyButtons();
-          UI.updateBadges();
-          UI.renderLeaderboard();
-          UI.renderBoard();
-        });
+        els.langZh.addEventListener("click", () => setLanguage("zh"));
+        els.langEn.addEventListener("click", () => setLanguage("en"));
 
         bindNewGameLongPress();
 
@@ -2485,6 +2474,9 @@
           UI.closeResultModal();
           startNewGame();
         });
+        els.resultModal.addEventListener("click", (e) => {
+          if (e.target === els.resultModal) UI.closeResultModal();
+        });
 
         document.addEventListener("keydown", (e) => {
           if (els.resultModal.classList.contains("open")) {
@@ -2522,6 +2514,7 @@
           if (e.key >= "1" && e.key <= "9") {
             writeNumber(Number(e.key));
           } else if (e.key === "Backspace" || e.key === "Delete" || e.key === "0") {
+            e.preventDefault();
             erase();
           } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
             if (e.shiftKey) redo();
@@ -2529,6 +2522,7 @@
           } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") {
             redo();
           } else if (e.key.toLowerCase() === "n") {
+            e.preventDefault();
             GameState.noteMode = !GameState.noteMode;
             UI.renderBoard();
           } else if (e.key === "ArrowUp" && GameState.selected >= 9) {
@@ -2548,6 +2542,14 @@
             GameState.selected += 1;
             UI.renderBoard();
           }
+        });
+
+        document.addEventListener("visibilitychange", () => {
+          if (document.hidden) return;
+          if (!GameState.startedAt || GameState.completed || GameState.failed) return;
+          GameState.elapsedSeconds = Math.floor((Date.now() - GameState.startedAt) / 1000);
+          UI.updateTimer();
+          URLSync.schedule();
         });
 
         window.addEventListener("beforeunload", () => URLSync.flush(true));
